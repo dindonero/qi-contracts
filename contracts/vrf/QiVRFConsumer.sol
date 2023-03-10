@@ -5,9 +5,7 @@ pragma solidity ^0.8.0;
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 
-
 abstract contract QiVRFConsumer is VRFConsumerBaseV2 {
-
     // Chainlink VRF Variables
     VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
     uint64 private immutable i_subscriptionId;
@@ -30,18 +28,22 @@ abstract contract QiVRFConsumer is VRFConsumerBaseV2 {
     }
 
     function requestRandomWords(uint32 numWords) internal returns (uint256) {
-        return i_vrfCoordinator.requestRandomWords(
-            i_gasLane,
-            i_subscriptionId,
-            REQUEST_CONFIRMATIONS,
-            i_callbackGasLimit,
-            numWords
-        );
+        return
+            i_vrfCoordinator.requestRandomWords(
+                i_gasLane,
+                i_subscriptionId,
+                REQUEST_CONFIRMATIONS,
+                i_callbackGasLimit,
+                numWords
+            );
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal override {
         mintNFTFromRandomness(requestId, randomWords);
     }
 
-    function mintNFTFromRandomness(uint256 requestId, uint256[] memory randomWords) internal virtual;
+    function mintNFTFromRandomness(
+        uint256 requestId,
+        uint256[] memory randomWords
+    ) internal virtual;
 }

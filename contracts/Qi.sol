@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-
 import "./interfaces/IQiBackground.sol";
 import "./interfaces/ITreasury.sol";
 import "./vrf/QiVRFConsumer.sol";
@@ -12,9 +11,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-
 contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
-
     enum ZodiacAnimal {
         Rat,
         Ox,
@@ -34,14 +31,12 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         address owner;
         ZodiacAnimal category;
         uint256 tokenId;
-        uint256 wstETHAmount;
     }
 
     struct QiNFT {
         ZodiacAnimal category;
         uint256 animalVersionId;
         uint256 backgroundId;
-        uint256 wstETHAmount;
     }
 
     /// @notice Mapping for keeping track of the request id for each NFT request (requestId => RandomNFTRequest)
@@ -69,22 +64,45 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
 
     string public BASE_URI;
 
-
     uint256 public constant MINT_PRICE = 0.1 ether;
     uint256 public constant MAX_SUPPLY = 8888;
     uint256 public constant MAX_QI_BASE_VERSIONS = 24;
 
-
-    event QiNFTRequested(uint256 indexed requestId, address indexed owner, uint256 indexed tokenId, ZodiacAnimal category);
-    event QiNFTMinted(uint256 indexed NFTVersion, address indexed owner, uint256 indexed wstETHAmountDeposited, ZodiacAnimal category);
-    event QiNFTBurned(uint256 indexed tokenId, address indexed owner, uint256 indexed wstETHAmountReturned, ZodiacAnimal category);
+    event QiNFTRequested(
+        uint256 indexed requestId,
+        address indexed owner,
+        uint256 indexed tokenId,
+        ZodiacAnimal category
+    );
+    event QiNFTMinted(
+        uint256 indexed requestId,
+        address indexed owner,
+        uint256 indexed tokenId,
+        ZodiacAnimal category,
+        uint256 animalVersionId,
+        uint256 backgroundId
+    );
+    event QiNFTBurned(
+        uint256 indexed tokenId,
+        address indexed owner,
+        ZodiacAnimal indexed category,
+        uint256 animalVersionId,
+        uint256 backgroundId
+    );
 
     error Qi__NotEnoughETHForMint(uint256 price, uint256 amount);
     error Qi__NonExistentAnimalCategory(ZodiacAnimal category);
     error Qi__MaxSupplyReached(uint256 maxSupply);
 
-
-    constructor(IQiBackground _qiBackground, address _wstETH, string memory baseURI, ITreasury _treasury, address receiver, uint96 feeNumerator, VRFConsumerConfig memory vrfConfig) ERC721("QI", "QI") QiVRFConsumer(vrfConfig) {
+    constructor(
+        IQiBackground _qiBackground,
+        address _wstETH,
+        string memory baseURI,
+        ITreasury _treasury,
+        address receiver,
+        uint96 feeNumerator,
+        VRFConsumerConfig memory vrfConfig
+    ) ERC721("QI", "QI") QiVRFConsumer(vrfConfig) {
         s_QiBackground = _qiBackground;
         s_wstETH = _wstETH;
         BASE_URI = baseURI;
@@ -93,12 +111,10 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         _setDefaultRoyalty(receiver, feeNumerator);
     }
 
-
     /**
      * @dev Mints a new NFT
      */
     function mint(ZodiacAnimal category) public payable {
-
         if (msg.value < MINT_PRICE) {
             revert Qi__NotEnoughETHForMint(MINT_PRICE, msg.value);
         }
@@ -112,24 +128,24 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
             revert Qi__MaxSupplyReached(MAX_SUPPLY);
         }
 
+        uint256 tokenId = s_nextTokenId;
+
         uint256 requestId = requestRandomWords(3);
 
-        uint256 wstETHAmount = s_QiTreasury.depositETHFromMint{value: msg.value}(s_nextTokenId);
+        s_QiTreasury.depositETHFromMint{value: msg.value}(tokenId);
 
         s_requestIdToRandomNFTRequest[requestId] = RandomNFTRequest({
             owner: msg.sender,
             category: category,
-            tokenId: s_nextTokenId,
-            wstETHAmount: wstETHAmount
+            tokenId: tokenId
         });
 
         s_nextTokenId++;
         s_totalAmountOfNFTsRequested++;
         // TODO TEAM (Optional): Set royalty info sale price for specific NFT
 
-        emit QiNFTMinted(requestId, msg.sender, wstETHAmount, category);
+        emit QiNFTRequested(requestId, msg.sender, tokenId, category);
     }
-
 
     /**
      * @dev Burns `tokenId`. See {ERC721-_burn}.
@@ -141,42 +157,22 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
      */
     function burn(uint256 tokenId) public {
         //solhint-disable-next-line max-line-length
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenId),
+            "ERC721: caller is not token owner or approved"
+        );
+
+        ZodiacAnimal category = s_tokenIdToQiNFT[tokenId].category;
+        uint256 animalVersionId = s_tokenIdToQiNFT[tokenId].animalVersionId;
+        uint256 backgroundId = s_tokenIdToQiNFT[tokenId].backgroundId;
+
         _burn(tokenId);
         s_totalAmountOfNFTsRequested--;
 
         s_QiTreasury.withdrawWstETH(tokenId, msg.sender);
-        // TODO: Return 95% wstETH to the user
-        // TODO: Return 5% wstETH to the treasury
-        emit QiNFTBurned(tokenId, msg.sender, s_tokenIdToQiNFT[tokenId].wstETHAmount, ZodiacAnimal(uint256(tokenId) % 12));
+
+        emit QiNFTBurned(tokenId, msg.sender, category, animalVersionId, backgroundId);
     }
-
-
-    /**
-     * @dev Sets the IPFS bucket for the NFT metadata
-     * @param IPFSBucket The address that will own the minted NFT
-     */
-    function setIPFSBucket(string memory IPFSBucket) public onlyOwner {
-        s_IPFSBucket = IPFSBucket;
-    }
-
-
-    /**
-     * @dev Base URI for computing {tokenURI}. The resulting URI for each
-     * token will be the concatenation of the `baseURI` and the `tokenId`.
-     */
-    function _baseURI() internal view override returns (string memory) {
-        return BASE_URI;
-    }
-
-
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721Enumerable, ERC2981) returns (bool) {
-        return ERC721Enumerable.supportsInterface(interfaceId) || ERC2981.supportsInterface(interfaceId);
-    }
-
 
     /**
      * @dev Sets the QiBackground contract
@@ -186,34 +182,60 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         s_QiBackground = qiBackground;
     }
 
+    /**
+     * @dev Sets the IPFS bucket for the NFT metadata
+     * @param IPFSBucket The address that will own the minted NFT
+     */
+    function setIPFSBucket(string memory IPFSBucket) public onlyOwner {
+        s_IPFSBucket = IPFSBucket;
+    }
+
+    /**
+     * @dev Base URI for computing {tokenURI}. The resulting URI for each
+     * token will be the concatenation of the `baseURI` and the `tokenId`.
+     */
+    function _baseURI() internal view override returns (string memory) {
+        return BASE_URI;
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721Enumerable, ERC2981) returns (bool) {
+        return
+            ERC721Enumerable.supportsInterface(interfaceId) ||
+            ERC2981.supportsInterface(interfaceId);
+    }
 
     /**
      * @dev Receives the random words from the VRF and mints the NFT
      * @param requestId The request id
      * @param randomWords The random words received from the VRF
      */
-    function mintNFTFromRandomness(uint256 requestId, uint256[] memory randomWords) internal override {
+    function mintNFTFromRandomness(
+        uint256 requestId,
+        uint256[] memory randomWords
+    ) internal override {
         RandomNFTRequest memory nftRequest = s_requestIdToRandomNFTRequest[requestId];
         address owner = nftRequest.owner;
         uint256 tokenId = nftRequest.tokenId;
         ZodiacAnimal category = nftRequest.category;
-        uint256 wstETHAmount = s_requestIdToRandomNFTRequest[tokenId].wstETHAmount;
 
-        // TODO TEAM: define array of % chances for each version
+        // TODO TEAM: define array of % chances for each version (maybe each version has the same chance array?)
         uint256 animalVersion = randomWords[0] % MAX_QI_BASE_VERSIONS;
         // TODO: set random s_QiBackground
+        uint256 backgroundId = 0;
 
         s_tokenIdToQiNFT[tokenId] = QiNFT({
             category: category,
             animalVersionId: animalVersion,
-            backgroundId: 0, // todo
-            wstETHAmount: wstETHAmount
+            backgroundId: backgroundId
         });
 
         _safeMint(nftRequest.owner, tokenId);
-        emit QiNFTMinted(requestId, owner, s_tokenIdToQiNFT[tokenId].wstETHAmount, category);
+        emit QiNFTMinted(requestId, owner, tokenId, category, animalVersion, backgroundId);
         delete s_requestIdToRandomNFTRequest[requestId];
     }
-
-
 }

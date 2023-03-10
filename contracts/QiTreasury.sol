@@ -2,15 +2,15 @@
 
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
-import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
-import '@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol';
-import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 //import '@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol';
-import './interfaces/uniswap/INonfungiblePositionManager.sol';
+import "./interfaces/uniswap/INonfungiblePositionManager.sol";
 //import '@uniswap/v3-periphery/contracts/interfaces/external/IWETH9.sol';
-import './interfaces/uniswap/IWETH9.sol';
+import "./interfaces/uniswap/IWETH9.sol";
 
 /**
  * @title QiTreasury
@@ -20,7 +20,6 @@ import './interfaces/uniswap/IWETH9.sol';
  * 2. Exists an already initialized position in the Uniswap wstETH <=> YAM pool
  */
 contract QiTreasury is Ownable {
-
     address public s_qi;
 
     mapping(uint256 => uint128) s_qiTokenIdToLiquidityProvided;
@@ -36,13 +35,20 @@ contract QiTreasury is Ownable {
 
     uint24 public constant POOL_FEE = 3000;
 
-
     modifier onlyQi() {
         require(msg.sender == s_qi, "QiTreasury: Only Qi can call this function.");
         _;
     }
 
-    constructor(address _qi, IERC20 _wstETH, IERC20 _yam, address _WETH, ISwapRouter _swapRouter, INonfungiblePositionManager _nonfungiblePositionManager, uint256 _poolTokenId) {
+    constructor(
+        address _qi,
+        IERC20 _wstETH,
+        IERC20 _yam,
+        address _WETH,
+        ISwapRouter _swapRouter,
+        INonfungiblePositionManager _nonfungiblePositionManager,
+        uint256 _poolTokenId
+    ) {
         s_qi = _qi;
         s_wstETH = _wstETH;
         s_yam = _yam;
@@ -51,7 +57,6 @@ contract QiTreasury is Ownable {
         i_nonfungiblePositionManager = _nonfungiblePositionManager;
         s_poolTokenId = _poolTokenId;
     }
-
 
     /////////////////////////////////////////////////
     ///             OnlyQi functions              ///
@@ -63,13 +68,16 @@ contract QiTreasury is Ownable {
      * @param qiTokenId The Qi token id that was minted for the deposit
      * @return The amount of wstETH received
      */
-    function depositETHFromMint(uint256 qiTokenId) external payable onlyQi returns (uint256){
+    function depositETHFromMint(uint256 qiTokenId) external payable onlyQi returns (uint256) {
+        // Deposit ETH into Lido and receive wstETH
         uint256 wstETHAmount = depositETHForWstETH(msg.value);
+
+        // Add liquidity to the Uniswap pool
         (uint128 liquidity, , ) = increaseLiquidityCurrentRange(wstETHAmount);
         s_qiTokenIdToLiquidityProvided[qiTokenId] = liquidity;
+
         return wstETHAmount;
     }
-
 
     /**
      * @dev Withdraws ETH from the uniswap pool and returns the amount of WETH received
@@ -78,43 +86,42 @@ contract QiTreasury is Ownable {
     function withdrawWstETH(uint256 qiTokenId, address receiver) external onlyQi {
         uint128 liquidity = s_qiTokenIdToLiquidityProvided[qiTokenId];
 
+        // Remove liquidity based on the initial provided liquidity from the QiNFT
         uint256 wstETHAmount = decreaseLiquidity(liquidity);
-
         delete s_qiTokenIdToLiquidityProvided[qiTokenId];
 
+        // Swap wstETH for WETH -- future improvement: unstake when possible
         uint256 wethAmount = swapWstETHForWETH(wstETHAmount);
-
         IWETH9(s_WETH).withdraw(wethAmount);
 
-        TransferHelper.safeTransferETH(receiver, wethAmount);
-    }
+        // Retain 5% of the ETH for the treasury
+        uint256 reclaimableETH = (wethAmount * 95) / 100;
 
+        TransferHelper.safeTransferETH(receiver, reclaimableETH);
+    }
 
     /////////////////////////////////////////////////
     ///             OnlyOwner functions           ///
     /////////////////////////////////////////////////
 
-
-    function withdrawYam(uint256 yamAmount) external onlyOwner returns (uint256) {
+    function withdrawYam(uint256 yamAmount) external onlyOwner {
         s_yam.transfer(msg.sender, yamAmount);
-        return yamAmount;
     }
 
-    function withdrawWstETH(uint256 wstETHAmount) external onlyOwner returns (uint256) {
-        s_wstETH.transfer(msg.sender, wstETHAmount);
-        return wstETHAmount;
+    // TODO TEAM: define what owner function are needed
+    function withdrawETH(uint256 ETHAmount) external onlyOwner {
+        TransferHelper.safeTransferETH(msg.sender, ETHAmount);
     }
-
 
     /*
      * @notice Transfers the position NFT to the contract and sets its params
+     * TODO FEDDAS: maybe transfer the NFT to the contract and have one setter for the token id
      */
     function setPositionNFT(uint256 poolTokenId) external onlyOwner {
         require(s_poolTokenId == 0, "QiTreasury: Position already set");
         i_nonfungiblePositionManager.safeTransferFrom(msg.sender, address(this), poolTokenId);
         s_poolTokenId = poolTokenId;
     }
-
 
     /*
      * @notice Transfers the position NFT to the owner
@@ -124,11 +131,9 @@ contract QiTreasury is Ownable {
         s_poolTokenId = 0;
     }
 
-
     /////////////////////////////////////////////////
     ///           Internal functions              ///
     /////////////////////////////////////////////////
-
 
     /**
      * @dev Deposits ETH into Lido's contract and returns the amount of wstETH received
@@ -141,8 +146,7 @@ contract QiTreasury is Ownable {
     }
 
     function swapWstETHForWETH(uint256 wstETHAmount) internal returns (uint256 amountOut) {
-        ISwapRouter.ExactInputSingleParams memory params =
-        ISwapRouter.ExactInputSingleParams({
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
             tokenIn: address(s_wstETH),
             tokenOut: s_WETH,
             fee: POOL_FEE,
@@ -160,7 +164,6 @@ contract QiTreasury is Ownable {
         s_qi = _qi;
     }
 
-
     /**
      * @notice Increases liquidity in the current position range
      * @dev Pool must be initialized already to add liquidity
@@ -169,32 +172,30 @@ contract QiTreasury is Ownable {
      */
     function increaseLiquidityCurrentRange(
         uint256 wstETHAmount
-    )
-    internal
-    returns (
-        uint128 liquidity,
-        uint256 amount0,
-        uint256 amount1
-    ) {
+    ) internal returns (uint128 liquidity, uint256 amount0, uint256 amount1) {
         // Calculates the order of the tokens in the pool
-        (address token0, address token1) = address(s_wstETH) < address(s_yam) ? (address(s_wstETH), address(s_yam)) : (address(s_yam), address(s_wstETH));
-        (uint256 amountAdd0, uint256 amountAdd1) = address(s_wstETH) < address(s_yam) ? (wstETHAmount, s_yam.balanceOf(address(this))) : (s_yam.balanceOf(address(this)), wstETHAmount);
+        (address token0, address token1) = address(s_wstETH) < address(s_yam)
+            ? (address(s_wstETH), address(s_yam))
+            : (address(s_yam), address(s_wstETH));
+        (uint256 amountAdd0, uint256 amountAdd1) = address(s_wstETH) < address(s_yam)
+            ? (wstETHAmount, s_yam.balanceOf(address(this)))
+            : (s_yam.balanceOf(address(this)), wstETHAmount);
 
         TransferHelper.safeApprove(token0, address(i_nonfungiblePositionManager), amountAdd0);
         TransferHelper.safeApprove(token1, address(i_nonfungiblePositionManager), amountAdd1);
 
-        INonfungiblePositionManager.IncreaseLiquidityParams memory params = INonfungiblePositionManager.IncreaseLiquidityParams({
-            tokenId: s_poolTokenId,
-            amount0Desired: amountAdd0,
-            amount1Desired: amountAdd1,
-            amount0Min: 0,
-            amount1Min: 0,
-            deadline: block.timestamp
-        });
+        INonfungiblePositionManager.IncreaseLiquidityParams
+            memory params = INonfungiblePositionManager.IncreaseLiquidityParams({
+                tokenId: s_poolTokenId,
+                amount0Desired: amountAdd0,
+                amount1Desired: amountAdd1,
+                amount0Min: 0,
+                amount1Min: 0,
+                deadline: block.timestamp
+            });
 
         (liquidity, amount0, amount1) = i_nonfungiblePositionManager.increaseLiquidity(params);
     }
-
 
     /**
      * @notice A function that removes the liquidity provided by the minting of a QiNFT
@@ -202,15 +203,14 @@ contract QiTreasury is Ownable {
      * @return wstETHAmount The amount received back in wstETH
      */
     function decreaseLiquidity(uint128 liquidity) internal returns (uint256 wstETHAmount) {
-
-        INonfungiblePositionManager.DecreaseLiquidityParams memory params =
-            INonfungiblePositionManager.DecreaseLiquidityParams({
+        INonfungiblePositionManager.DecreaseLiquidityParams
+            memory params = INonfungiblePositionManager.DecreaseLiquidityParams({
                 tokenId: s_poolTokenId,
                 liquidity: liquidity,
                 amount0Min: 0,
                 amount1Min: 0,
                 deadline: block.timestamp
-        });
+            });
 
         (uint256 amount0, uint256 amount1) = i_nonfungiblePositionManager.decreaseLiquidity(params);
 
