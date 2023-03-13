@@ -99,7 +99,6 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         address _wstETH,
         string memory baseURI,
         ITreasury _treasury,
-        address receiver,
         uint96 feeNumerator,
         VRFConsumerConfig memory vrfConfig
     ) ERC721("QI", "QI") QiVRFConsumer(vrfConfig) {
@@ -107,8 +106,7 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         s_wstETH = _wstETH;
         BASE_URI = baseURI;
         s_QiTreasury = _treasury;
-        // TODO TEAM: Set default royalty info
-        _setDefaultRoyalty(receiver, feeNumerator);
+        _setDefaultRoyalty(address(_treasury), feeNumerator);
     }
 
     /**
@@ -124,7 +122,7 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         }
 
         // We need this check here because the fulfillRandomWords function cannot revert
-        if (s_totalAmountOfNFTsRequested >= MAX_SUPPLY) {
+        if (s_totalAmountOfNFTsRequested == MAX_SUPPLY) {
             revert Qi__MaxSupplyReached(MAX_SUPPLY);
         }
 
@@ -142,7 +140,6 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
 
         s_nextTokenId++;
         s_totalAmountOfNFTsRequested++;
-        // TODO TEAM (Optional): Set royalty info sale price for specific NFT
 
         emit QiNFTRequested(requestId, msg.sender, tokenId, category);
     }
@@ -169,7 +166,7 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         _burn(tokenId);
         s_totalAmountOfNFTsRequested--;
 
-        s_QiTreasury.withdrawWstETH(tokenId, msg.sender);
+        s_QiTreasury.withdrawByQiBurned(tokenId, msg.sender);
 
         emit QiNFTBurned(tokenId, msg.sender, category, animalVersionId, backgroundId);
     }
@@ -216,17 +213,17 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
      */
     function mintNFTFromRandomness(
         uint256 requestId,
-        uint256[] memory randomWords
+        uint256[] calldata randomWords
     ) internal override {
         RandomNFTRequest memory nftRequest = s_requestIdToRandomNFTRequest[requestId];
         address owner = nftRequest.owner;
         uint256 tokenId = nftRequest.tokenId;
         ZodiacAnimal category = nftRequest.category;
 
-        // TODO TEAM: define array of % chances for each version (maybe each version has the same chance array?)
+        // TODO TEAM: define array of % chances for each version -- might make more sense to do this based on the version (ie version 1-15 is bronze, 16-21 silver and 22-24 gold)
         uint256 animalVersion = randomWords[0] % MAX_QI_BASE_VERSIONS;
-        // TODO: set random s_QiBackground
-        uint256 backgroundId = 0;
+
+        uint256 backgroundId = s_QiBackground.mintBackgroundWithQi(randomWords, owner);
 
         s_tokenIdToQiNFT[tokenId] = QiNFT({
             category: category,
@@ -234,7 +231,7 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
             backgroundId: backgroundId
         });
 
-        _safeMint(nftRequest.owner, tokenId);
+        _safeMint(owner, tokenId);
         emit QiNFTMinted(requestId, owner, tokenId, category, animalVersion, backgroundId);
         delete s_requestIdToRandomNFTRequest[requestId];
     }

@@ -38,12 +38,12 @@ abstract contract QiVRFConsumer is VRFConsumerBaseV2 {
             );
     }
 
-    function fulfillRandomWords(uint256 requestId, uint256[] memory randomWords) internal override {
+    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
         mintNFTFromRandomness(requestId, randomWords);
     }
 
     function mintNFTFromRandomness(
         uint256 requestId,
-        uint256[] memory randomWords
+        uint256[] calldata randomWords
     ) internal virtual;
 }
