@@ -2,14 +2,13 @@
 
 pragma solidity ^0.8.0;
 
-import "./interfaces/IQi.sol";
-import "./interfaces/ITreasury.sol";
 import "./vrf/QiVRFConsumer.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+
 
 // TODO: if backend doesn't implement any enumerable function, then change it to standard erc721
 contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
@@ -48,11 +47,10 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
 
     uint256 public s_nextTokenId;
 
-
-    IQi public s_qi;
+    address public s_qi;
 
     /// @notice Address of the QiTreasury contract
-    ITreasury public s_QiTreasury;
+    address public s_qiTreasury;
 
     string public BASE_URI;
 
@@ -63,6 +61,8 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
 
     // TODO TEAM: define max supply? It may overcome the max supply as the QiNFT will always require a background
     uint256 public constant MAX_SUPPLY = 10000;
+
+    bool internal initialized;
 
     event QiBackgroundRequested(
         uint256 indexed requestId,
@@ -80,7 +80,7 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
     );
 
     modifier onlyQi() {
-        require(msg.sender == address(s_qi), "QiTreasury: Only Qi can call this function.");
+        require(msg.sender == s_qi, "QiTreasury: Only Qi can call this function.");
         _;
     }
 
@@ -88,9 +88,13 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
     error QiBackground__NonExistentBackgroundCategory(BackgroundType category);
     error QiBackground__MaxSupplyReached(uint256 maxSupply);
 
-    constructor(IQi _qi, ITreasury _treasury, VRFConsumerConfig memory vrfConfig) QiVRFConsumer(vrfConfig) ERC721("QI Background", "QIB"){
-        s_qi = _qi;
-        s_QiTreasury = _treasury;
+    constructor() ERC721("QI Background", "QIB") {}
+
+    function initialize(VRFConsumerConfig memory vrfConfig, string memory baseUri) external {
+        require(!initialized, "QiBackground: Contract instance has already been initialized");
+        initialized = true;
+        initialize(vrfConfig);
+        BASE_URI = baseUri;
     }
 
 
@@ -117,6 +121,7 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
         uint256 requestId = requestRandomWords(1);
 
         // TODO: send ether to treasury -- what happens to the ether?
+        payable(s_qiTreasury).transfer(msg.value);
 
         s_requestIdToRandomBackgroundRequest[requestId] = RandomBackgroundRequested({
             owner: msg.sender,
@@ -154,8 +159,30 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
      * @dev Sets the Qi contract
      * @param qi The address of the Qi contract
      */
-    function setQiBackground(IQi qi) public onlyOwner {
+    function setQiAddress(address qi) public onlyOwner {
         s_qi = qi;
+    }
+
+    /**
+     * @dev Sets the Qi treasury contract
+     * @param qiTreasury The address of the Qi treasury contract
+     */
+    function setQiTreasuryAddress(address qiTreasury) public onlyOwner {
+        s_qiTreasury = qiTreasury;
+    }
+
+    /**
+     * @dev See {IERC721Metadata-name}.
+     */
+    function name() public view virtual override returns (string memory) {
+        return "Qi Background";
+    }
+
+    /**
+     * @dev See {IERC721Metadata-symbol}.
+     */
+    function symbol() public view virtual override returns (string memory) {
+        return "QIB";
     }
 
     /**

@@ -2,16 +2,17 @@
 
 pragma solidity ^0.8.0;
 
-import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import "./VRFConsumerBaseV2ProxyAdapter.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 
-abstract contract QiVRFConsumer is VRFConsumerBaseV2 {
+
+abstract contract QiVRFConsumer is VRFConsumerBaseV2ProxyAdapter {
     // Chainlink VRF Variables
-    VRFCoordinatorV2Interface private immutable i_vrfCoordinator;
-    uint64 private immutable i_subscriptionId;
-    bytes32 private immutable i_gasLane;
-    uint32 private immutable i_callbackGasLimit;
-    uint16 private constant REQUEST_CONFIRMATIONS = 3;
+    VRFCoordinatorV2Interface private s_vrfCoordinator;
+    uint64 private s_subscriptionId;
+    bytes32 private s_gasLane;
+    uint32 private s_callbackGasLimit;
+    uint16 private REQUEST_CONFIRMATIONS = 3;
 
     struct VRFConsumerConfig {
         address vrfConsumerBase;
@@ -20,20 +21,21 @@ abstract contract QiVRFConsumer is VRFConsumerBaseV2 {
         uint32 callbackGasLimit;
     }
 
-    constructor(VRFConsumerConfig memory config) VRFConsumerBaseV2(config.vrfConsumerBase) {
-        i_vrfCoordinator = VRFCoordinatorV2Interface(config.vrfConsumerBase);
-        i_subscriptionId = config.subscriptionId;
-        i_gasLane = config.gasLane;
-        i_callbackGasLimit = config.callbackGasLimit;
+    function initialize(VRFConsumerConfig memory config) internal {
+        initialize(config.vrfConsumerBase);
+        s_vrfCoordinator = VRFCoordinatorV2Interface(config.vrfConsumerBase);
+        s_subscriptionId = config.subscriptionId;
+        s_gasLane = config.gasLane;
+        s_callbackGasLimit = config.callbackGasLimit;
     }
 
     function requestRandomWords(uint32 numWords) internal returns (uint256) {
         return
-            i_vrfCoordinator.requestRandomWords(
-                i_gasLane,
-                i_subscriptionId,
+            s_vrfCoordinator.requestRandomWords(
+                s_gasLane,
+                s_subscriptionId,
                 REQUEST_CONFIRMATIONS,
-                i_callbackGasLimit,
+                s_callbackGasLimit,
                 numWords
             );
     }

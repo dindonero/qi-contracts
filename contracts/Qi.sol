@@ -68,6 +68,9 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
     uint256 public constant MAX_SUPPLY = 8888;
     uint256 public constant MAX_QI_BASE_VERSIONS = 24;
 
+    bool internal initialized = false;
+
+
     event QiNFTRequested(
         uint256 indexed requestId,
         address indexed owner,
@@ -94,14 +97,19 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
     error Qi__NonExistentAnimalCategory(ZodiacAnimal category);
     error Qi__MaxSupplyReached(uint256 maxSupply);
 
-    constructor(
+    constructor() ERC721("Qi", "Qi") {}
+
+    function initialize(
         IQiBackground _qiBackground,
         address _wstETH,
         string memory baseURI,
         ITreasury _treasury,
         uint96 feeNumerator,
         VRFConsumerConfig memory vrfConfig
-    ) ERC721("QI", "QI") QiVRFConsumer(vrfConfig) {
+    ) external {
+        require(!initialized, "QiBackground: Contract instance has already been initialized");
+        initialized = true;
+        initialize(vrfConfig);
         s_QiBackground = _qiBackground;
         s_wstETH = _wstETH;
         BASE_URI = baseURI;
@@ -185,6 +193,20 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
      */
     function setIPFSBucket(string memory IPFSBucket) public onlyOwner {
         s_IPFSBucket = IPFSBucket;
+    }
+
+    /**
+     * @dev See {IERC721Metadata-name}.
+     */
+    function name() public view virtual override returns (string memory) {
+        return "Qi";
+    }
+
+    /**
+     * @dev See {IERC721Metadata-symbol}.
+     */
+    function symbol() public view virtual override returns (string memory) {
+        return "Qi";
     }
 
     /**
