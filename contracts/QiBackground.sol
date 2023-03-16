@@ -9,10 +9,8 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-
 // TODO: if backend doesn't implement any enumerable function, then change it to standard erc721
 contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
-
     enum BackgroundType {
         Type1,
         Type2,
@@ -90,13 +88,20 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
 
     constructor() ERC721("QI Background", "QIB") {}
 
-    function initialize(VRFConsumerConfig memory vrfConfig, string memory baseUri) external {
+    function initialize(
+        VRFConsumerConfig memory vrfConfig,
+        string memory baseUri,
+        address qi,
+        address qiTreasury
+    ) external {
         require(!initialized, "QiBackground: Contract instance has already been initialized");
         initialized = true;
         initialize(vrfConfig);
         BASE_URI = baseUri;
+        s_qi = qi;
+        s_qiTreasury = qiTreasury;
+        transferOwnership(msg.sender);
     }
-
 
     /**
      * @dev Mints a new background
@@ -134,9 +139,11 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
         emit QiBackgroundRequested(requestId, msg.sender, tokenId, category);
     }
 
-
     // TODO: check if when minting Qi the category is also random
-    function mintBackgroundWithQi(uint256[] calldata randomWords, address receiver) external onlyQi returns (uint256 tokenId) {
+    function mintBackgroundWithQi(
+        uint256[] calldata randomWords,
+        address receiver
+    ) external onlyQi returns (uint256 tokenId) {
         BackgroundType category = BackgroundType(randomWords[1] % enumSize()); // RandomWords % length of enum
         uint256 backgroundVersion = randomWords[2] % MAX_QI_BACKGROUND_VERSIONS;
 
@@ -147,13 +154,10 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
             versionId: backgroundVersion
         });
 
-
         _safeMint(receiver, tokenId);
 
         s_nextTokenId++;
     }
-
-
 
     /**
      * @dev Sets the Qi contract
@@ -206,7 +210,9 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
         uint256 requestId,
         uint256[] calldata randomWords
     ) internal override {
-        RandomBackgroundRequested memory backgroundRequest = s_requestIdToRandomBackgroundRequest[requestId];
+        RandomBackgroundRequested memory backgroundRequest = s_requestIdToRandomBackgroundRequest[
+            requestId
+        ];
         address owner = backgroundRequest.owner;
         uint256 tokenId = backgroundRequest.tokenId;
         BackgroundType category = backgroundRequest.category;

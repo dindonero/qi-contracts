@@ -49,7 +49,7 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
     IQiBackground public s_QiBackground;
 
     /// @notice Address of the QiTreasury contract
-    ITreasury public s_QiTreasury;
+    ITreasury public s_qiTreasury;
 
     /// @notice IPFS bucket for safekeeping the NFT metadata
     string public s_IPFSBucket;
@@ -69,7 +69,6 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
     uint256 public constant MAX_QI_BASE_VERSIONS = 24;
 
     bool internal initialized = false;
-
 
     event QiNFTRequested(
         uint256 indexed requestId,
@@ -113,8 +112,9 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         s_QiBackground = _qiBackground;
         s_wstETH = _wstETH;
         BASE_URI = baseURI;
-        s_QiTreasury = _treasury;
+        s_qiTreasury = _treasury;
         _setDefaultRoyalty(address(_treasury), feeNumerator);
+        transferOwnership(msg.sender);
     }
 
     /**
@@ -138,7 +138,7 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
 
         uint256 requestId = requestRandomWords(3);
 
-        s_QiTreasury.depositETHFromMint{value: msg.value}(tokenId);
+        s_qiTreasury.depositETHFromMint{value: msg.value}(tokenId);
 
         s_requestIdToRandomNFTRequest[requestId] = RandomNFTRequest({
             owner: msg.sender,
@@ -174,7 +174,7 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         _burn(tokenId);
         s_totalAmountOfNFTsRequested--;
 
-        s_QiTreasury.withdrawByQiBurned(tokenId, msg.sender);
+        s_qiTreasury.withdrawByQiBurned(tokenId, msg.sender);
 
         emit QiNFTBurned(tokenId, msg.sender, category, animalVersionId, backgroundId);
     }

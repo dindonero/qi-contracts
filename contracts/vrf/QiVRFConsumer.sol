@@ -5,7 +5,6 @@ pragma solidity ^0.8.0;
 import "./VRFConsumerBaseV2ProxyAdapter.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 
-
 abstract contract QiVRFConsumer is VRFConsumerBaseV2ProxyAdapter {
     // Chainlink VRF Variables
     VRFCoordinatorV2Interface private s_vrfCoordinator;
@@ -40,7 +39,10 @@ abstract contract QiVRFConsumer is VRFConsumerBaseV2ProxyAdapter {
             );
     }
 
-    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
+    function fulfillRandomWords(
+        uint256 requestId,
+        uint256[] calldata randomWords
+    ) internal override {
         mintNFTFromRandomness(requestId, randomWords);
     }
 
