@@ -31,7 +31,7 @@ export const networkConfig: NetworkConfigInfo = {
         WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
         yamGovernance: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // deployer TODO: change to yam governance
         teamMultisig: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // deployer TODO: change to team multisig
-        royaltiesFeeNumerator: "30000", // Denominator 10000 -- so 30000 = 3%
+        royaltiesFeeNumerator: "300", // Denominator 10000 -- so 300 = 3%
     },
     5: {
         name: "goerli",
@@ -44,7 +44,7 @@ export const networkConfig: NetworkConfigInfo = {
         WETH: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
         yamGovernance: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // deployer TODO: change to yam governance
         teamMultisig: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // deployer TODO: change to team multisig
-        royaltiesFeeNumerator: "30000", // Denominator 10000 -- so 30000 = 3%
+        royaltiesFeeNumerator: "300", // Denominator 10000 -- so 300 = 3%
     },
 }
 

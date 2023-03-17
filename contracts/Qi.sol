@@ -114,7 +114,7 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         BASE_URI = baseURI;
         s_qiTreasury = _treasury;
         _setDefaultRoyalty(address(_treasury), feeNumerator);
-        transferOwnership(msg.sender);
+        _transferOwnership(msg.sender);
     }
 
     /**

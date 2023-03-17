@@ -100,7 +100,7 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
         BASE_URI = baseUri;
         s_qi = qi;
         s_qiTreasury = qiTreasury;
-        transferOwnership(msg.sender);
+        _transferOwnership(msg.sender);
     }
 
     /**

@@ -36,7 +36,7 @@ const deployQiBackground: DeployFunction = async function (hre: HardhatRuntimeEn
     }
 
     const qiBaseURI = "https://api.qi.io/nft/" // TODO: Change this to the correct baseURI
-    const qiBackgrounddBaseURI = "https://api.qi.io/nft-background/" // TODO: Change this to the correct baseURI
+    const qiBackgroundBaseURI = "https://api.qi.io/nft-background/" // TODO: Change this to the correct baseURI
 
     const qiTransparentProxy = await ethers.getContract("Qi_Proxy")
     const qiBackgroundTransparentProxy = await ethers.getContract("QiBackground_Proxy")
@@ -67,7 +67,12 @@ const deployQiBackground: DeployFunction = async function (hre: HardhatRuntimeEn
         qiBackgroundTransparentProxy.address
     )
 
-    const tx = await qiBackground.initialize()
+    const tx = await qiBackground.initialize(
+        vrfConfig,
+        qiBackgroundBaseURI,
+        qiTransparentProxy.address,
+        qiTreasury.address
+    )
     await tx.wait(1)
 
     log("QiBackground Initialized!")
