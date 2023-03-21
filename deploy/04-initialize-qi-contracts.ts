@@ -5,11 +5,11 @@ import {
     qiBackgroundBaseURI,
     qiBackgroundRoyaltiesFeeNumerator,
     qiBaseURI,
-    qiRoyaltiesFeeNumerator
+    qiRoyaltiesFeeNumerator,
 } from "../helper-hardhat-config"
-import {Qi, QiBackground, QiTreasury} from "../typechain-types";
-import {QiVRFConsumer} from "../typechain-types/contracts/Qi";
-import VRFConsumerConfigStruct = QiVRFConsumer.VRFConsumerConfigStruct;
+import { Qi, QiBackground, QiTreasury } from "../typechain-types"
+import { QiVRFConsumer } from "../typechain-types/contracts/Qi"
+import VRFConsumerConfigStruct = QiVRFConsumer.VRFConsumerConfigStruct
 
 const FUND_AMOUNT = "1000000000000000000000"
 
@@ -81,7 +81,7 @@ const deployQiBackground: DeployFunction = async function (hre: HardhatRuntimeEn
         qiBackgroundBaseURI,
         qiTransparentProxy.address,
         qiTreasury.address,
-        qiBackgroundRoyaltiesFeeNumerator,
+        qiBackgroundRoyaltiesFeeNumerator
     )
     await tx.wait(1)
 

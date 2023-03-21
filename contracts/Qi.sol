@@ -182,7 +182,6 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
         delete s_tokenIdToQiNFT[tokenId];
     }
 
-
     /**
      * @dev Sets the IPFS bucket for the NFT metadata
      * @param IPFSBucket The address that will own the minted NFT
@@ -219,9 +218,7 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
     function supportsInterface(
         bytes4 interfaceId
     ) public view virtual override(ERC721, ERC2981) returns (bool) {
-        return
-            ERC721.supportsInterface(interfaceId) ||
-            ERC2981.supportsInterface(interfaceId);
+        return ERC721.supportsInterface(interfaceId) || ERC2981.supportsInterface(interfaceId);
     }
 
     /**

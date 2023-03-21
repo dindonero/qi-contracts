@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
-
 // TODO: if backend doesn't implement any enumerable function, then change it to standard erc721
 contract QiBackground is QiVRFConsumer, ERC2981, ERC721 {
     enum BackgroundType {
@@ -180,9 +179,7 @@ contract QiBackground is QiVRFConsumer, ERC2981, ERC721 {
     function supportsInterface(
         bytes4 interfaceId
     ) public view virtual override(ERC721, ERC2981) returns (bool) {
-        return
-        ERC721.supportsInterface(interfaceId) ||
-        ERC2981.supportsInterface(interfaceId);
+        return ERC721.supportsInterface(interfaceId) || ERC2981.supportsInterface(interfaceId);
     }
 
     /**

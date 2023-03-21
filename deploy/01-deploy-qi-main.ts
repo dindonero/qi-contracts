@@ -24,4 +24,4 @@ const deployQi: DeployFunction = async function (hre: HardhatRuntimeEnvironment)
     log("----------------------------------")
 }
 export default deployQi
-deployQi.tags = ["all", "qi","contracts", "main"]
+deployQi.tags = ["all", "qi", "contracts", "main"]
