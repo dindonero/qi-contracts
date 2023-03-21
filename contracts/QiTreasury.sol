@@ -8,6 +8,7 @@ import "./interfaces/uniswap/IWETH9.sol";
 
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "./access/Governable.sol";
 
 /**
  * @title QiTreasury
@@ -16,7 +17,7 @@ import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
  * 1. The QiTreasury holds an unlimited amount of YAM
  * 2. Exists an already initialized position in the Uniswap wstETH <=> YAM pool
  */
-contract QiTreasury is Ownable {
+contract QiTreasury is Governable {
     address public s_qi;
 
     IERC20 public s_wstETH;
@@ -31,11 +32,9 @@ contract QiTreasury is Ownable {
 
     address private s_teamMultisig;
 
-    address private s_yamGovernance;
-
     uint256 public immutable i_deployedTime;
 
-    uint256 public s_numTeamWithdraws;
+    uint256 public s_numTeamWithdrawsPerformed;
 
     modifier onlyQi() {
         require(msg.sender == s_qi, "QiTreasury: Only Qi can call this function.");
@@ -56,8 +55,7 @@ contract QiTreasury is Ownable {
         i_swapRouter = _swapRouter;
         i_deployedTime = block.timestamp;
         s_teamMultisig = _teamMultisig;
-        s_yamGovernance = _yamGovernance;
-        transferOwnership(_yamGovernance);
+        _setGov(_yamGovernance);
     }
 
     /////////////////////////////////////////////////
@@ -99,10 +97,10 @@ contract QiTreasury is Ownable {
 
     function withdrawTeamAndTreasuryFee() external {
         require(
-            block.timestamp >= i_deployedTime + (6 * 30 days) * (s_numTeamWithdraws + 1),
+            block.timestamp >= i_deployedTime + (6 * 30 days) * (s_numTeamWithdrawsPerformed + 1),
             "Function can only be called every 6 months"
         );
-        s_numTeamWithdraws++;
+        s_numTeamWithdrawsPerformed++;
 
         uint256 wstETHAmount = s_wstETH.balanceOf(address(this));
         uint256 withdrawableWstETHAmount = (wstETHAmount * 2) / 100;
@@ -114,7 +112,7 @@ contract QiTreasury is Ownable {
         uint256 ethFeeAmount = wethAmount / 2;
 
         TransferHelper.safeTransferETH(s_teamMultisig, ethFeeAmount);
-        TransferHelper.safeTransferETH(s_yamGovernance, ethFeeAmount);
+        TransferHelper.safeTransferETH(gov, ethFeeAmount);
     }
 
     receive() external payable {
@@ -122,15 +120,19 @@ contract QiTreasury is Ownable {
     }
 
     /////////////////////////////////////////////////
-    ///             OnlyOwner functions           ///
+    ///             OnlyGov functions             ///
     /////////////////////////////////////////////////
 
-    function setQi(address _qi) external onlyOwner {
+    function setQi(address _qi) external onlyGov {
         s_qi = _qi;
     }
 
-    function setTeamMultisig(address _teamMultisig) external onlyOwner {
+    function setTeamMultisig(address _teamMultisig) external onlyGov {
         s_teamMultisig = _teamMultisig;
+    }
+
+    function removeLiquidity(uint256 amount, address receiver) external onlyGov {
+        TransferHelper.safeTransfer(address(s_wstETH), receiver, amount);
     }
 
     /////////////////////////////////////////////////
@@ -143,7 +145,7 @@ contract QiTreasury is Ownable {
      * @return The amount of wstETH received
      */
     function depositETHForWstETH(uint256 amount) internal returns (uint256) {
-        payable(address(s_wstETH)).transfer(amount);
+        payable(address(s_wstETH)).send(amount);
         return s_wstETH.balanceOf(address(this));
     }
 

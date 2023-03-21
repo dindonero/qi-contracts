@@ -7,11 +7,11 @@ import "./interfaces/ITreasury.sol";
 import "./vrf/QiVRFConsumer.sol";
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./access/Governable.sol";
 
-contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
+contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
     enum ZodiacAnimal {
         Rat,
         Ox,
@@ -99,28 +99,30 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
     constructor() ERC721("Qi", "Qi") {}
 
     function initialize(
+        VRFConsumerConfig memory _vrfConfig,
         IQiBackground _qiBackground,
         address _wstETH,
         string memory baseURI,
         ITreasury _treasury,
-        uint96 feeNumerator,
-        VRFConsumerConfig memory vrfConfig
+        uint96 _feeNumerator,
+        address _yamGovernance
     ) external {
         require(!initialized, "QiBackground: Contract instance has already been initialized");
+        // TODO: require msg.sender == hardcoded address to prevent frontrunning
         initialized = true;
-        initialize(vrfConfig);
+        initialize(_vrfConfig);
         s_QiBackground = _qiBackground;
         s_wstETH = _wstETH;
         BASE_URI = baseURI;
         s_qiTreasury = _treasury;
-        _setDefaultRoyalty(address(_treasury), feeNumerator);
-        _transferOwnership(msg.sender);
+        _setDefaultRoyalty(address(_treasury), _feeNumerator);
+        _setGov(_yamGovernance);
     }
 
     /**
-     * @dev Mints a new NFT
+     * @dev Requests a new NFT mint
      */
-    function mint(ZodiacAnimal category) public payable {
+    function requestMint(ZodiacAnimal category) public payable {
         if (msg.value < MINT_PRICE) {
             revert Qi__NotEnoughETHForMint(MINT_PRICE, msg.value);
         }
@@ -138,7 +140,7 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
 
         uint256 requestId = requestRandomWords(3);
 
-        s_qiTreasury.depositETHFromMint{value: msg.value}(tokenId);
+        s_qiTreasury.depositETHFromMint{value: msg.value}();
 
         s_requestIdToRandomNFTRequest[requestId] = RandomNFTRequest({
             owner: msg.sender,
@@ -174,24 +176,18 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
         _burn(tokenId);
         s_totalAmountOfNFTsRequested--;
 
-        s_qiTreasury.withdrawByQiBurned(tokenId, msg.sender);
+        s_qiTreasury.withdrawByQiBurned(msg.sender);
 
         emit QiNFTBurned(tokenId, msg.sender, category, animalVersionId, backgroundId);
+        delete s_tokenIdToQiNFT[tokenId];
     }
 
-    /**
-     * @dev Sets the QiBackground contract
-     * @param qiBackground The address of the QiBackground contract
-     */
-    function setQiBackground(IQiBackground qiBackground) public onlyOwner {
-        s_QiBackground = qiBackground;
-    }
 
     /**
      * @dev Sets the IPFS bucket for the NFT metadata
      * @param IPFSBucket The address that will own the minted NFT
      */
-    function setIPFSBucket(string memory IPFSBucket) public onlyOwner {
+    function setIPFSBucket(string memory IPFSBucket) public onlyGov {
         s_IPFSBucket = IPFSBucket;
     }
 
@@ -222,9 +218,9 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
      */
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC721Enumerable, ERC2981) returns (bool) {
+    ) public view virtual override(ERC721, ERC2981) returns (bool) {
         return
-            ERC721Enumerable.supportsInterface(interfaceId) ||
+            ERC721.supportsInterface(interfaceId) ||
             ERC2981.supportsInterface(interfaceId);
     }
 
@@ -235,7 +231,7 @@ contract Qi is ERC721Enumerable, ERC2981, Ownable, QiVRFConsumer {
      */
     function mintNFTFromRandomness(
         uint256 requestId,
-        uint256[] calldata randomWords
+        uint256[] memory randomWords
     ) internal override {
         RandomNFTRequest memory nftRequest = s_requestIdToRandomNFTRequest[requestId];
         address owner = nftRequest.owner;

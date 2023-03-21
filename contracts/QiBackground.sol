@@ -7,10 +7,10 @@ import "./vrf/QiVRFConsumer.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+
 
 // TODO: if backend doesn't implement any enumerable function, then change it to standard erc721
-contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
+contract QiBackground is QiVRFConsumer, ERC2981, ERC721 {
     enum BackgroundType {
         Type1,
         Type2,
@@ -52,6 +52,7 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
 
     string public BASE_URI;
 
+    // TODO
     uint256 public constant MAX_QI_BACKGROUND_VERSIONS = 72;
 
     // TODO TEAM: check mint price
@@ -89,18 +90,20 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
     constructor() ERC721("QI Background", "QIB") {}
 
     function initialize(
-        VRFConsumerConfig memory vrfConfig,
-        string memory baseUri,
-        address qi,
-        address qiTreasury
+        VRFConsumerConfig memory _vrfConfig,
+        string memory _baseUri,
+        address _qi,
+        address _qiTreasury,
+        uint96 _feeNumerator
     ) external {
         require(!initialized, "QiBackground: Contract instance has already been initialized");
+        // TODO: require msg.sender == hardcoded address to prevent frontrunning
         initialized = true;
-        initialize(vrfConfig);
-        BASE_URI = baseUri;
-        s_qi = qi;
-        s_qiTreasury = qiTreasury;
-        _transferOwnership(msg.sender);
+        initialize(_vrfConfig);
+        BASE_URI = _baseUri;
+        s_qi = _qi;
+        s_qiTreasury = _qiTreasury;
+        _setDefaultRoyalty(_qiTreasury, _feeNumerator);
     }
 
     /**
@@ -125,7 +128,6 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
 
         uint256 requestId = requestRandomWords(1);
 
-        // TODO: send ether to treasury -- what happens to the ether?
         payable(s_qiTreasury).transfer(msg.value);
 
         s_requestIdToRandomBackgroundRequest[requestId] = RandomBackgroundRequested({
@@ -141,7 +143,7 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
 
     // TODO: check if when minting Qi the category is also random
     function mintBackgroundWithQi(
-        uint256[] calldata randomWords,
+        uint256[] memory randomWords,
         address receiver
     ) external onlyQi returns (uint256 tokenId) {
         BackgroundType category = BackgroundType(randomWords[1] % enumSize()); // RandomWords % length of enum
@@ -155,24 +157,7 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
         });
 
         _safeMint(receiver, tokenId);
-
         s_nextTokenId++;
-    }
-
-    /**
-     * @dev Sets the Qi contract
-     * @param qi The address of the Qi contract
-     */
-    function setQiAddress(address qi) public onlyOwner {
-        s_qi = qi;
-    }
-
-    /**
-     * @dev Sets the Qi treasury contract
-     * @param qiTreasury The address of the Qi treasury contract
-     */
-    function setQiTreasuryAddress(address qiTreasury) public onlyOwner {
-        s_qiTreasury = qiTreasury;
     }
 
     /**
@@ -187,6 +172,17 @@ contract QiBackground is QiVRFConsumer, Ownable, ERC721 {
      */
     function symbol() public view virtual override returns (string memory) {
         return "QIB";
+    }
+
+    /**
+     * @dev See {IERC165-supportsInterface} and {IERC721-supportsInterface}.
+     */
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721, ERC2981) returns (bool) {
+        return
+        ERC721.supportsInterface(interfaceId) ||
+        ERC2981.supportsInterface(interfaceId);
     }
 
     /**

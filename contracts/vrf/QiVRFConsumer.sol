@@ -41,13 +41,13 @@ abstract contract QiVRFConsumer is VRFConsumerBaseV2ProxyAdapter {
 
     function fulfillRandomWords(
         uint256 requestId,
-        uint256[] calldata randomWords
+        uint256[] memory randomWords
     ) internal override {
         mintNFTFromRandomness(requestId, randomWords);
     }
 
     function mintNFTFromRandomness(
         uint256 requestId,
-        uint256[] calldata randomWords
+        uint256[] memory randomWords
     ) internal virtual;
 }

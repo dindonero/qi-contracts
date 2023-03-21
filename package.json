@@ -8,9 +8,7 @@
     "ethers": "^5.5.4",
     "hardhat": "^2.9.0",
     "hardhat-deploy": "^0.10.5",
-    "hardhat-gas-reporter": "^1.0.7",
-    "prettier": "^2.5.1",
-    "solidity-coverage": "^0.7.18"
+    "hardhat-gas-reporter": "^1.0.7"
   },
   "scripts": {
     "test": "yarn hardhat test",
