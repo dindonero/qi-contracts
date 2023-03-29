@@ -1,13 +1,34 @@
-# Sample Hardhat Project
+# Qi Hardhat Contracts
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+This repo holds Qi main and background contracts developed using Hardhat and Typescript.
 
-Try running some of the following tasks:
+## Installation
 
-```shell
-npx hardhat help
-npx hardhat test
-REPORT_GAS=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
+1. Clone the repository and install the dependencies.
+```bash
+git clone https://github.com/dindonero/qi-contracts.git
+cd qi-contracts
+yarn install
+```
+2. (Optional: Goerli) Create a `.env` file in the root directory and add the following environment variables:
+```bash
+GOERLI_RPC_URL=
+PRIVATE_KEY=
+ETHERSCAN_API_KEY=
+```
+
+### Deploy the contract
+
+```bash
+yarn deploy
+```
+
+### Run the tests
+```bash
+yarn test
+```
+
+### Get coverage
+```bash
+yarn hardhat coverage
 ```
