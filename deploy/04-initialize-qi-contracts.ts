@@ -1,6 +1,7 @@
 import { DeployFunction } from "hardhat-deploy/types"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
 import {
+    developmentChains,
     networkConfig,
     qiBackgroundBaseURI,
     qiBackgroundRoyaltiesFeeNumerator,
@@ -10,6 +11,7 @@ import {
 import { Qi, QiBackground, QiTreasury } from "../typechain-types"
 import { QiVRFConsumer } from "../typechain-types/contracts/Qi"
 import VRFConsumerConfigStruct = QiVRFConsumer.VRFConsumerConfigStruct
+
 
 const FUND_AMOUNT = "1000000000000000000000"
 
@@ -86,6 +88,7 @@ const deployQiBackground: DeployFunction = async function (hre: HardhatRuntimeEn
 
     log("QiBackground Initialized!")
     log("----------------------------------")
+
 }
 export default deployQiBackground
 deployQiBackground.tags = ["all", "contracts", "main"]

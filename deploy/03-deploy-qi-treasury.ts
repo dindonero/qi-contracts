@@ -29,4 +29,4 @@ const deployQiBackground: DeployFunction = async function (hre: HardhatRuntimeEn
     log("----------------------------------")
 }
 export default deployQiBackground
-deployQiBackground.tags = ["all", "contracts", "main"]
+deployQiBackground.tags = ["all", "contracts", "treasury", "main"]

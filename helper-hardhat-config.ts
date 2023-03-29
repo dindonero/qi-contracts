@@ -41,6 +41,7 @@ export const networkConfig: NetworkConfigInfo = {
         swapRouter: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
         wstETH: "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f",
         WETH: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+        DAI: "0xdc31ee1784292379fbb2964b3b9c4124d8f89c60",
         yamGovernance: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to yam governance
         teamMultisig: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to team multisig
     },
@@ -53,3 +54,7 @@ export const qiBackgroundBaseURI = "https://api.qi.io/nft-background/" // TODO: 
 export const qiRoyaltiesFeeNumerator = "300" // TODO: check this value. Denominator 10000 -- so 300 = 3%
 
 export const qiBackgroundRoyaltiesFeeNumerator = "300" // TODO: check this value. Denominator 10000 -- so 300 = 3%
+
+
+export const frontEndContractsFile = "../qi-marketplace/constants/networkMapping.json"
+export const frontEndAbiLocation = "../qi-marketplace/constants/"
