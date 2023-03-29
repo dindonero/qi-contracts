@@ -11,11 +11,12 @@ const deployQiBackground: DeployFunction = async function (hre: HardhatRuntimeEn
     const qi = await ethers.getContract("Qi_Proxy")
     const wstETH = networkConfig[chainId].wstETH
     const WETH = networkConfig[chainId].WETH
+    const DAI = networkConfig[chainId].DAI
     const swapRouter = networkConfig[chainId].swapRouter
     const yamGovernance = networkConfig[chainId].yamGovernance
     const teamMultisig = networkConfig[chainId].teamMultisig
 
-    const args = [qi.address, wstETH, WETH, swapRouter, yamGovernance, teamMultisig]
+    const args = [qi.address, wstETH, WETH, DAI, swapRouter, yamGovernance, teamMultisig]
 
     log("Deploying QiTreasury...")
     await deploy("QiTreasury", {

@@ -40,13 +40,13 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
     }
 
     /// @notice Mapping for keeping track of the request id for each NFT request (requestId => RandomNFTRequest)
-    mapping(uint256 => RandomNFTRequest) private s_requestIdToRandomNFTRequest;
+    mapping(uint256 => RandomNFTRequest) public s_requestIdToRandomNFTRequest;
 
     /// @notice Mapping for keeping track of the NFT of each token (TokenId => QiNFT)
     mapping(uint256 => QiNFT) public s_tokenIdToQiNFT;
 
     /// @notice Address of the QiBackground contract
-    IQiBackground public s_QiBackground;
+    IQiBackground public s_qiBackground;
 
     /// @notice Address of the QiTreasury contract
     ITreasury public s_qiTreasury;
@@ -60,14 +60,19 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
     /// @notice Counter to keep track of the total supply of NFTs + NFTs requested
     uint256 internal s_totalAmountOfNFTsRequested;
 
-    address private s_wstETH;
-
+    /// @notice The base URI for the NFT metadata
     string public BASE_URI;
 
+    /// @notice The price for minting a new NFT
     uint256 public constant MINT_PRICE = 0.1 ether;
+
+    /// @notice The max supply of NFTs
     uint256 public constant MAX_SUPPLY = 8888;
+
+    /// @notice The max amount of versions for each animal
     uint256 public constant MAX_QI_BASE_VERSIONS = 24;
 
+    /// @notice Boolean to check if the contract has been initialized
     bool internal initialized = false;
 
     event QiNFTRequested(
@@ -92,49 +97,48 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
         uint256 backgroundId
     );
 
+    error ERC721__CallerIsNotOwnerOrApproved(uint256 tokenId);
     error Qi__NotEnoughETHForMint(uint256 price, uint256 amount);
     error Qi__NonExistentAnimalCategory(ZodiacAnimal category);
     error Qi__MaxSupplyReached(uint256 maxSupply);
+    error Qi__AlreadyInitialized();
 
     constructor() ERC721("Qi", "Qi") {}
 
+    /**
+     * @dev Initializes the contract
+     */
     function initialize(
         VRFConsumerConfig memory _vrfConfig,
-        IQiBackground _qiBackground,
-        address _wstETH,
         string memory baseURI,
+        IQiBackground _qiBackground,
         ITreasury _treasury,
         uint96 _feeNumerator,
         address _yamGovernance
     ) external {
-        require(!initialized, "QiBackground: Contract instance has already been initialized");
+        if (initialized) revert Qi__AlreadyInitialized();
         // TODO: require msg.sender == hardcoded address to prevent frontrunning
         initialized = true;
         initialize(_vrfConfig);
-        s_QiBackground = _qiBackground;
-        s_wstETH = _wstETH;
         BASE_URI = baseURI;
+        s_qiBackground = _qiBackground;
         s_qiTreasury = _treasury;
         _setDefaultRoyalty(address(_treasury), _feeNumerator);
         _setGov(_yamGovernance);
     }
 
     /**
-     * @dev Requests a new NFT mint
+     * @notice Requests a new NFT mint
+     * @dev The NFT will be minted after the VRF request is fulfilled
+     * @param category The category of the NFT
      */
     function requestMint(ZodiacAnimal category) public payable {
-        if (msg.value < MINT_PRICE) {
-            revert Qi__NotEnoughETHForMint(MINT_PRICE, msg.value);
-        }
+        if (msg.value < MINT_PRICE) revert Qi__NotEnoughETHForMint(MINT_PRICE, msg.value);
 
-        if (category > ZodiacAnimal.Pig) {
-            revert Qi__NonExistentAnimalCategory(category);
-        }
+        if (category > ZodiacAnimal.Pig) revert Qi__NonExistentAnimalCategory(category);
 
         // We need this check here because the fulfillRandomWords function cannot revert
-        if (s_totalAmountOfNFTsRequested == MAX_SUPPLY) {
-            revert Qi__MaxSupplyReached(MAX_SUPPLY);
-        }
+        if (s_totalAmountOfNFTsRequested == MAX_SUPPLY) revert Qi__MaxSupplyReached(MAX_SUPPLY);
 
         uint256 tokenId = s_nextTokenId;
 
@@ -163,11 +167,8 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
      * - The caller must own `tokenId` or be an approved operator.
      */
     function burn(uint256 tokenId) public {
-        //solhint-disable-next-line max-line-length
-        require(
-            _isApprovedOrOwner(_msgSender(), tokenId),
-            "ERC721: caller is not token owner or approved"
-        );
+        if (!_isApprovedOrOwner(_msgSender(), tokenId))
+            revert ERC721__CallerIsNotOwnerOrApproved(tokenId);
 
         ZodiacAnimal category = s_tokenIdToQiNFT[tokenId].category;
         uint256 animalVersionId = s_tokenIdToQiNFT[tokenId].animalVersionId;
@@ -238,7 +239,7 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
         // TODO TEAM: define array of % chances for each version -- might make more sense to do this based on the version (ie version 1-15 is bronze, 16-21 silver and 22-24 gold)
         uint256 animalVersion = randomWords[0] % MAX_QI_BASE_VERSIONS;
 
-        uint256 backgroundId = s_QiBackground.mintBackgroundWithQi(randomWords, owner);
+        uint256 backgroundId = s_qiBackground.mintBackgroundWithQi(randomWords, owner);
 
         s_tokenIdToQiNFT[tokenId] = QiNFT({
             category: category,

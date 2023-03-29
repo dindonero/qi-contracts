@@ -74,9 +74,7 @@ import VRFConsumerConfigStruct = QiVRFConsumer.VRFConsumerConfigStruct
                           qiTreasury.address,
                           0
                       )
-                  ).to.be.revertedWith(
-                      "QiBackground: Contract instance has already been initialized"
-                  )
+                  ).to.be.revertedWith("QiBackground__AlreadyInitialized")
               })
           })
       })

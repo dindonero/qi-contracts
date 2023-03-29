@@ -73,16 +73,13 @@ import VRFConsumerConfigStruct = QiVRFConsumer.VRFConsumerConfigStruct
                   await expect(
                       qi.initialize(
                           fakeVrfConfig,
-                          qiTreasury.address,
-                          qiTreasury.address,
                           "",
+                          qiTreasury.address,
                           qiTreasury.address,
                           0,
                           qiTreasury.address
                       )
-                  ).to.be.revertedWith(
-                      "QiBackground: Contract instance has already been initialized"
-                  )
+                  ).to.be.revertedWith("Qi__AlreadyInitialized")
               })
           })
       })

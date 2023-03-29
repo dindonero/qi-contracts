@@ -58,9 +58,8 @@ const deployQiBackground: DeployFunction = async function (hre: HardhatRuntimeEn
 
     const qiInitializeTx = await qi.initialize(
         vrfConfig,
-        qiBackgroundTransparentProxy.address,
-        wstETH,
         qiBaseURI,
+        qiBackgroundTransparentProxy.address,
         qiTreasury.address,
         qiRoyaltiesFeeNumerator,
         yamGovernance
