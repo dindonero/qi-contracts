@@ -12,9 +12,11 @@ yarn install
 ```
 2. (Optional: Goerli) Create a `.env` file in the root directory and add the following environment variables:
 ```bash
+MAINNET_RPC_URL=
 GOERLI_RPC_URL=
 PRIVATE_KEY=
 ETHERSCAN_API_KEY=
+UPDATE_FRONT_END=
 ```
 
 ### Deploy the contract
