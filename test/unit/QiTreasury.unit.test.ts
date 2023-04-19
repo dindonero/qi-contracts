@@ -83,7 +83,9 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
               })
 
               it("Should withdraw team fee only every 6 months", async () => {
-                  await qi.requestMint(1, { value: await qi.MINT_PRICE() })
+                  await qi.requestMint(1, {
+                      value: (await qi.MINT_PRICE()).add("1000000000000000000000"),
+                  })
 
                   const teamMultisig = networkConfig[network.config!.chainId!].teamMultisig!
                   const yamGov = networkConfig[network.config!.chainId!].yamGovernance!

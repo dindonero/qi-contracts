@@ -8,10 +8,7 @@ import { deployments, ethers, network } from "hardhat"
 import { Qi, QiBackground } from "../../../typechain-types"
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 import { assert, expect } from "chai"
-import { networkConfig } from "../../../helper-hardhat-config"
 import { QiTreasury } from "../../../typechain-types"
-import { QiVRFConsumer } from "../../../typechain-types/contracts/Qi"
-import VRFConsumerConfigStruct = QiVRFConsumer.VRFConsumerConfigStruct
 
 !developmentChains.includes(network.name)
     ? describe.skip
@@ -60,20 +57,8 @@ import VRFConsumerConfigStruct = QiVRFConsumer.VRFConsumerConfigStruct
               })
 
               it("Should revert if initialized again", async () => {
-                  const fakeVrfConfig: VRFConsumerConfigStruct = {
-                      vrfConsumerBase: qiTreasury.address,
-                      subscriptionId: 0,
-                      gasLane: networkConfig[chainId].gasLane!,
-                      callbackGasLimit: 0,
-                  }
                   await expect(
-                      qiBackground.initialize(
-                          fakeVrfConfig,
-                          "",
-                          qiTreasury.address,
-                          qiTreasury.address,
-                          0
-                      )
+                      qiBackground.initialize("", qiTreasury.address, qiTreasury.address, 0)
                   ).to.be.revertedWith("QiBackground__AlreadyInitialized")
               })
           })

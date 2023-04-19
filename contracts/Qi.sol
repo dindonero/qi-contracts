@@ -94,7 +94,8 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
         address indexed owner,
         ZodiacAnimal indexed category,
         uint256 animalVersionId,
-        uint256 backgroundId
+        uint256 backgroundId,
+        uint256 ethAmountReturned
     );
 
     error ERC721__CallerIsNotOwnerOrApproved(uint256 tokenId);
@@ -103,13 +104,12 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
     error Qi__MaxSupplyReached(uint256 maxSupply);
     error Qi__AlreadyInitialized();
 
-    constructor() ERC721("Qi", "Qi") {}
+    constructor(VRFConsumerConfig memory _vrfConfig) ERC721("Qi", "Qi") QiVRFConsumer(_vrfConfig) {}
 
     /**
      * @dev Initializes the contract
      */
     function initialize(
-        VRFConsumerConfig memory _vrfConfig,
         string memory baseURI,
         IQiBackground _qiBackground,
         ITreasury _treasury,
@@ -119,7 +119,6 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
         if (initialized) revert Qi__AlreadyInitialized();
         // TODO: require msg.sender == hardcoded address to prevent frontrunning
         initialized = true;
-        initialize(_vrfConfig);
         BASE_URI = baseURI;
         s_qiBackground = _qiBackground;
         s_qiTreasury = _treasury;
@@ -177,9 +176,16 @@ contract Qi is ERC721, ERC2981, Governable, QiVRFConsumer {
         _burn(tokenId);
         s_totalAmountOfNFTsRequested--;
 
-        s_qiTreasury.withdrawByQiBurned(msg.sender);
+        uint256 ethAmountReturned = s_qiTreasury.withdrawByQiBurned(msg.sender);
 
-        emit QiNFTBurned(tokenId, msg.sender, category, animalVersionId, backgroundId);
+        emit QiNFTBurned(
+            tokenId,
+            msg.sender,
+            category,
+            animalVersionId,
+            backgroundId,
+            ethAmountReturned
+        );
         delete s_tokenIdToQiNFT[tokenId];
     }
 

@@ -84,14 +84,14 @@ contract QiTreasury is Governable {
      * @dev Swaps wstETH for ETH and returns the amount received
      * @param receiver The address of the owner of the NFT who will receive the funds
      */
-    function withdrawByQiBurned(address receiver) external onlyQi {
+    function withdrawByQiBurned(address receiver) external onlyQi returns (uint256 wethAmount) {
         uint256 wstETHAmount = i_wstETH.balanceOf(address(this)) / s_numOutstandingNFTs;
 
         // Retain 5% of the wstETH for the treasury
         uint256 reclaimableWstETH = (wstETHAmount * 95) / 100;
 
         // Swap wstETH for WETH -- future improvement: unstake when possible
-        uint256 wethAmount = swapWstETHForWETH(reclaimableWstETH);
+        wethAmount = swapWstETHForWETH(reclaimableWstETH);
         IWETH9(i_WETH).withdraw(wethAmount);
 
         s_numOutstandingNFTs--;

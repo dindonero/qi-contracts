@@ -64,15 +64,8 @@ import VRFConsumerConfigStruct = QiVRFConsumer.VRFConsumerConfigStruct
               })
 
               it("Should revert if initialized again", async () => {
-                  const fakeVrfConfig: VRFConsumerConfigStruct = {
-                      vrfConsumerBase: qiTreasury.address,
-                      subscriptionId: 0,
-                      gasLane: networkConfig[chainId].gasLane!,
-                      callbackGasLimit: 0,
-                  }
                   await expect(
                       qi.initialize(
-                          fakeVrfConfig,
                           "",
                           qiTreasury.address,
                           qiTreasury.address,

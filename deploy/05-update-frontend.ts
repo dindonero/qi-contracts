@@ -1,15 +1,10 @@
-import {
-    frontEndContractsFile,
-    frontEndAbiLocation
-} from "../helper-hardhat-config"
+import { frontEndContractsFile, frontEndAbiLocation } from "../helper-hardhat-config"
 import fs from "fs"
 import { network, ethers } from "hardhat"
-import {HardhatRuntimeEnvironment} from "hardhat/types";
-import {DeployFunction} from "hardhat-deploy/types";
+import { HardhatRuntimeEnvironment } from "hardhat/types"
+import { DeployFunction } from "hardhat-deploy/types"
 
-const updateFrontEnd: DeployFunction = async function (
-    hre: HardhatRuntimeEnvironment
-) {
+const updateFrontEnd: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     if (process.env.UPDATE_FRONT_END) {
         console.log("Writing to front end...")
         await updateContractAddresses()
@@ -57,7 +52,7 @@ const updateContractAddresses = async () => {
         contractAddresses[chainId] = {
             Qi: [qi.address],
             QiBackground: [qiBackground.address],
-            QiTreasury: [qiTreasury.address]
+            QiTreasury: [qiTreasury.address],
         }
     }
 
@@ -65,4 +60,4 @@ const updateContractAddresses = async () => {
 }
 
 export default updateFrontEnd
-updateFrontEnd.tags = ["all", "contracts", "main", "frontend"]
+updateFrontEnd.tags = ["all", "main", "frontend"]

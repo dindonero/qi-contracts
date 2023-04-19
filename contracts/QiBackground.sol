@@ -93,13 +93,14 @@ contract QiBackground is QiVRFConsumer, ERC2981, ERC721 {
     error QiBackground__MaxSupplyReached(uint256 maxSupply);
     error QiBackground__AlreadyInitialized();
 
-    constructor() ERC721("QI Background", "QIB") {}
+    constructor(
+        VRFConsumerConfig memory _vrfConfig
+    ) ERC721("QI Background", "QIB") QiVRFConsumer(_vrfConfig) {}
 
     /**
      * @dev Initializes the contract
      */
     function initialize(
-        VRFConsumerConfig memory _vrfConfig,
         string memory _baseUri,
         address _qi,
         address _qiTreasury,
@@ -108,7 +109,6 @@ contract QiBackground is QiVRFConsumer, ERC2981, ERC721 {
         if (initialized) revert QiBackground__AlreadyInitialized();
         // TODO: require msg.sender == hardcoded address to prevent frontrunning
         initialized = true;
-        initialize(_vrfConfig);
         BASE_URI = _baseUri;
         s_qi = _qi;
         s_qiTreasury = _qiTreasury;

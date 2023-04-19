@@ -55,6 +55,5 @@ export const qiRoyaltiesFeeNumerator = "300" // TODO: check this value. Denomina
 
 export const qiBackgroundRoyaltiesFeeNumerator = "300" // TODO: check this value. Denominator 10000 -- so 300 = 3%
 
-
 export const frontEndContractsFile = "../qi-marketplace/constants/networkMapping.json"
 export const frontEndAbiLocation = "../qi-marketplace/constants/"
