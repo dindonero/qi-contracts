@@ -5,7 +5,7 @@ const requestMint = async () => {
     const qi = await ethers.getContractAt("Qi", qiProxy.address);
 
     console.log("Requesting mint...");
-    
+
     const tx = await qi.requestMint(1, { value: ethers.utils.parseEther("0.1") });
 
     const receipt = await tx.wait(1);

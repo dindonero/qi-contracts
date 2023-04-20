@@ -45,6 +45,19 @@ export const networkConfig: NetworkConfigInfo = {
         yamGovernance: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to yam governance
         teamMultisig: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to team multisig
     },
+    11155111: {
+        name: "sepolia",
+        subscriptionId: "10993", // todo for chainlink vrf
+        vrfCoordinatorV2: "0x8103B0A8A00be2DDC778e6e7eaa21791Cd364625",
+        gasLane: "0x474e34a077df58807dbe9c96d3c009b23b3c6d0cce433e59bbf5b34f823bc56c",
+        callbackGasLimit: "500000", // below this line there are no deployments for sepolia
+        swapRouter: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+        wstETH: "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f",
+        WETH: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+        DAI: "0xdc31ee1784292379fbb2964b3b9c4124d8f89c60",
+        yamGovernance: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to yam governance
+        teamMultisig: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to team multisig
+    },
 }
 
 export const developmentChains = ["hardhat", "localhost", "local"]

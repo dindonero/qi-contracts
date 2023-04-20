@@ -174,6 +174,8 @@ contract QiBackground is QiVRFConsumer, ERC2981, ERC721 {
 
         _safeMint(receiver, tokenId);
         s_nextTokenId++;
+        emit QiBackgroundMinted(0, receiver, tokenId, category, backgroundVersion);
+
     }
 
     /**
