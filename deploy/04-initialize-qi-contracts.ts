@@ -8,10 +8,6 @@ import {
     qiRoyaltiesFeeNumerator,
 } from "../helper-hardhat-config"
 import { Qi, QiBackground, QiTreasury } from "../typechain-types"
-import { QiVRFConsumer } from "../typechain-types/contracts/Qi"
-import VRFConsumerConfigStruct = QiVRFConsumer.VRFConsumerConfigStruct
-
-const FUND_AMOUNT = "1000000000000000000000"
 
 const deployQiBackground: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployments, network, ethers } = hre

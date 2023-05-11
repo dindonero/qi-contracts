@@ -29,36 +29,8 @@ import { assert, expect } from "chai"
           describe("Mint Background NFT", async () => {
               it("Should revert if not enough ETH is sent", async () => {
                   await expect(
-                      qiBackground.requestMint(category, { value: price.sub(1) })
+                      qiBackground.mint({ value: price.sub(1) })
                   ).to.be.revertedWith("QiBackground__NotEnoughETHForMint")
-              })
-
-              it("Should revert if non-existing category is sent", async () => {
-                  await expect(qiBackground.requestMint(100, { value: price })).to.be.reverted
-              })
-
-              it("Should revert if calling fulfillRandomWords without being the VRF Coordinator", async () => {
-                  const requestTx = await qiBackground.requestMint(category, { value: price })
-                  const requestReceipt = await requestTx.wait(1)
-                  const requestId = requestReceipt.events![5].args!.requestId
-
-                  await expect(
-                      qiBackground.rawFulfillRandomWords(requestId, [1, 2, 3])
-                  ).to.be.revertedWith("OnlyCoordinatorCanFulfill")
-              })
-
-              it("Should request a background", async () => {
-                  const requestTx = await qiBackground.requestMint(category, { value: price })
-                  const requestReceipt = await requestTx.wait(1)
-                  const requestId = requestReceipt.events![5].args!.requestId
-
-                  const request = await qiBackground.s_requestIdToRandomBackgroundRequest(requestId)
-
-                  // Assert
-                  assert.equal(requestReceipt.events![5].args!.category, category)
-                  assert.equal(requestReceipt.events![5].args!.owner, deployer.address)
-                  assert.equal(requestReceipt.events![5].args!.tokenId, request.tokenId.toString())
-                  assert.equal(request.category.toString(), category.toString())
               })
 
               it("Should mint a background", async () => {
