@@ -72,7 +72,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
                   const wstETHBalanceBefore = await wstETH.balanceOf(qiTreasury.address)
                   const numNFTsBefore = await qiTreasury.s_numOutstandingNFTs()
 
-                  await qi.requestMint(1, { value: await qi.MINT_PRICE() })
+                  await qi.mint({ value: await qi.MINT_PRICE() })
                   assert.isTrue(
                       (await wstETH.balanceOf(qiTreasury.address)).gt(wstETHBalanceBefore)
                   )
@@ -83,7 +83,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
               })
 
               it("Should withdraw team fee only every 6 months", async () => {
-                  await qi.requestMint(1, {
+                  await qi.mint({
                       value: (await qi.MINT_PRICE()).add("1000000000000000000000"),
                   })
 

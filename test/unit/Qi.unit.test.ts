@@ -12,7 +12,6 @@ import {assert, expect} from "chai"
           let deployer: SignerWithAddress
           let alice: SignerWithAddress
           let price: BigNumber
-          const category = 1
 
           beforeEach(async () => {
               const accounts = await ethers.getSigners()
@@ -36,9 +35,9 @@ import {assert, expect} from "chai"
                   const mintReceipt = await mintTx.wait(1)
 
                   const eventTopics = mintReceipt.events![7].topics
-
-                  const tokenId = +eventTopics[1]
-                  const backgroundTokenId = +eventTopics[2]
+                  
+                  const tokenId = +eventTopics[2]
+                  const backgroundTokenId = +eventTopics[3]
                   const qiNFT = await qi.s_tokenIdToQiBackgroundId(tokenId)
 
                   // Assert
@@ -76,10 +75,6 @@ import {assert, expect} from "chai"
                   assert.equal(burnReceipt.events![0].args!.from, deployer.address)
                   assert.equal(burnReceipt.events![0].args!.to, ethers.constants.AddressZero)
                   assert.equal(burnReceipt.events![0].args!.tokenId, tokenId)
-
-                  console.log("balaceAfter", balanceAfter.toString())
-                  console.log("balaceBefore", balanceBefore.toString())
-                  console.log("price", price.toString())
 
                   // Assert Burn event [8]
                   assert.isTrue(balanceAfter.sub(balanceBefore).gte(price.mul(90).div(100))) // verify if burning gets at least 90% of the ETH back

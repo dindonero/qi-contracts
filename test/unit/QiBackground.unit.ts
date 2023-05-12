@@ -11,9 +11,7 @@ import { assert, expect } from "chai"
           let qiBackground: QiBackground
           let deployer: SignerWithAddress
           let alice: SignerWithAddress
-          let vrfCoordinatorV2Mock: VRFCoordinatorV2Mock
           let price: BigNumber
-          const category = 1
 
           beforeEach(async () => {
               const accounts = await ethers.getSigners()
@@ -22,7 +20,6 @@ import { assert, expect } from "chai"
               await deployments.fixture(["all"])
               const qiBackgroundProxy = await ethers.getContract("QiBackground_Proxy")
               qiBackground = await ethers.getContractAt("QiBackground", qiBackgroundProxy.address)
-              vrfCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock")
               price = await qiBackground.MINT_PRICE()
           })
 
@@ -34,24 +31,12 @@ import { assert, expect } from "chai"
               })
 
               it("Should mint a background", async () => {
-                  const requestTx = await qiBackground.requestMint(category, { value: price })
-                  const requestReceipt = await requestTx.wait(1)
-                  const requestId = requestReceipt.events![5].args!.requestId
+                  const mintTx = await qiBackground.mint({ value: price })
+                  const mintReceipt = await mintTx.wait(1)
 
-                  const fulfillTx = await vrfCoordinatorV2Mock.fulfillRandomWords(
-                      requestId,
-                      qiBackground.address
-                  )
-                  const fulfillReceipt = await fulfillTx.wait(1)
+                  const eventTopics = mintReceipt.events![5].topics
 
-                  const eventData = ethers.utils.defaultAbiCoder.decode(
-                      ["uint256", "uint256"],
-                      fulfillReceipt.events![1].data
-                  )
-
-                  const tokenId = +fulfillReceipt.events![1].topics[3]
-                  const backgroundVersionId = eventData[1]
-                  const qiNFT = await qiBackground.s_tokenIdToQiBackground(tokenId)
+                  const tokenId = +eventTopics[2]
 
                   // Assert
                   assert.equal(await qiBackground.ownerOf(tokenId), deployer.address)
@@ -59,8 +44,6 @@ import { assert, expect } from "chai"
                       await qiBackground.tokenURI(tokenId),
                       qiBackgroundBaseURI + tokenId.toString()
                   )
-                  assert.equal(qiNFT.category, category)
-                  assert.equal(qiNFT.versionId.toString(), backgroundVersionId)
               })
           })
       })

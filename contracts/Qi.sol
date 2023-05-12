@@ -39,13 +39,13 @@ contract Qi is ERC721, ERC2981, Governable {
     event QiNFTMinted(
         address indexed owner,
         uint256 indexed tokenId,
-        uint256 backgroundId
+        uint256 indexed backgroundId
     );
 
     event QiNFTBurned(
         uint256 indexed tokenId,
         address indexed owner,
-        uint256 backgroundId,
+        uint256 indexed backgroundId,
         uint256 ethAmountReturned
     );
 

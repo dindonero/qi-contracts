@@ -17,7 +17,6 @@ import { QiTreasury } from "../../../typechain-types"
           let qiTreasury: QiTreasury
           let deployer: SignerWithAddress
           const price = ethers.utils.parseEther("0.01")
-          const maxSupply = 10000
           const baseURI = qiBackgroundBaseURI
           const chainId = network.config.chainId!
 
@@ -37,10 +36,6 @@ import { QiTreasury } from "../../../typechain-types"
 
               it("Should have the correct price", async () => {
                   assert.equal((await qiBackground.MINT_PRICE()).toString(), price.toString())
-              })
-
-              it("Should have the correct maxSupply", async () => {
-                  assert.equal(await qiBackground.MAX_SUPPLY(), maxSupply)
               })
 
               it("Should have the correct treasury", async () => {
