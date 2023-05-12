@@ -11,7 +11,6 @@ import "@openzeppelin/contracts/token/common/ERC2981.sol";
 import "./access/Governable.sol";
 
 contract Qi is ERC721, ERC2981, Governable {
-
     /// @notice Mapping for keeping track of the background of each token (TokenId => BackgroundTokenId)
     mapping(uint256 => uint256) public s_tokenIdToQiBackgroundId;
 
@@ -36,11 +35,7 @@ contract Qi is ERC721, ERC2981, Governable {
     /// @notice Boolean to check if the contract has been initialized
     bool internal initialized = false;
 
-    event QiNFTMinted(
-        address indexed owner,
-        uint256 indexed tokenId,
-        uint256 indexed backgroundId
-    );
+    event QiNFTMinted(address indexed owner, uint256 indexed tokenId, uint256 indexed backgroundId);
 
     event QiNFTBurned(
         uint256 indexed tokenId,
@@ -96,7 +91,6 @@ contract Qi is ERC721, ERC2981, Governable {
 
         _safeMint(msg.sender, tokenId);
         emit QiNFTMinted(msg.sender, tokenId, backgroundId);
-
     }
 
     /**
@@ -117,12 +111,7 @@ contract Qi is ERC721, ERC2981, Governable {
 
         uint256 ethAmountReturned = s_qiTreasury.withdrawByQiBurned(msg.sender);
 
-        emit QiNFTBurned(
-            tokenId,
-            msg.sender,
-            backgroundId,
-            ethAmountReturned
-        );
+        emit QiNFTBurned(tokenId, msg.sender, backgroundId, ethAmountReturned);
     }
 
     /**
@@ -155,5 +144,4 @@ contract Qi is ERC721, ERC2981, Governable {
     ) public view virtual override(ERC721, ERC2981) returns (bool) {
         return ERC721.supportsInterface(interfaceId) || ERC2981.supportsInterface(interfaceId);
     }
-
 }

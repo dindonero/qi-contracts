@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
 // TODO: if backend doesn't implement any enumerable function, then change it to standard erc721
 contract QiBackground is ERC2981, ERC721 {
-
     /// @notice Counter for the token ID
     uint256 public s_nextTokenId;
 
@@ -27,10 +26,7 @@ contract QiBackground is ERC2981, ERC721 {
 
     bool internal initialized;
 
-    event QiBackgroundMinted(
-        address indexed owner,
-        uint256 indexed tokenId
-    );
+    event QiBackgroundMinted(address indexed owner, uint256 indexed tokenId);
 
     modifier onlyQi() {
         require(msg.sender == s_qi, "QiTreasury: Only Qi can call this function.");
@@ -82,16 +78,12 @@ contract QiBackground is ERC2981, ERC721 {
      * @notice Mints a new NFT
      * @dev This function can only be called by the Qi contract
      */
-    function mintBackgroundWithQi(
-        address receiver
-    ) external onlyQi returns (uint256 tokenId) {
-
+    function mintBackgroundWithQi(address receiver) external onlyQi returns (uint256 tokenId) {
         tokenId = s_nextTokenId;
         s_nextTokenId++;
 
         _safeMint(receiver, tokenId);
         emit QiBackgroundMinted(receiver, tokenId);
-
     }
 
     /**
@@ -124,5 +116,4 @@ contract QiBackground is ERC2981, ERC721 {
     function _baseURI() internal view override returns (string memory) {
         return BASE_URI;
     }
-
 }

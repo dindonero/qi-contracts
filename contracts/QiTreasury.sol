@@ -176,7 +176,6 @@ contract QiTreasury is Governable {
      * @param stETHAmount The amount of stETH to swap
      */
     function swapStETHForETH(uint256 stETHAmount) internal {
-
         uint256 stEthAmount = i_stETH.balanceOf(address(this));
 
         i_stETH.approve(address(i_curveEthStEthPool), stEthAmount);

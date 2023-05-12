@@ -1,5 +1,5 @@
-import {DeployFunction} from "hardhat-deploy/types"
-import {HardhatRuntimeEnvironment} from "hardhat/types"
+import { DeployFunction } from "hardhat-deploy/types"
+import { HardhatRuntimeEnvironment } from "hardhat/types"
 
 const deployQiBackground: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployments, getNamedAccounts } = hre
@@ -22,7 +22,6 @@ const deployQiBackground: DeployFunction = async function (hre: HardhatRuntimeEn
 
     log("QiBackground Deployed!")
     log("----------------------------------")
-
 }
 export default deployQiBackground
 deployQiBackground.tags = ["all", "qiBackground", "contracts", "main"]

@@ -25,9 +25,9 @@ import { assert, expect } from "chai"
 
           describe("Mint Background NFT", async () => {
               it("Should revert if not enough ETH is sent", async () => {
-                  await expect(
-                      qiBackground.mint({ value: price.sub(1) })
-                  ).to.be.revertedWith("QiBackground__NotEnoughETHForMint")
+                  await expect(qiBackground.mint({ value: price.sub(1) })).to.be.revertedWith(
+                      "QiBackground__NotEnoughETHForMint"
+                  )
               })
 
               it("Should mint a background", async () => {

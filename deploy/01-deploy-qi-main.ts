@@ -1,11 +1,10 @@
-import {DeployFunction} from "hardhat-deploy/types"
-import {HardhatRuntimeEnvironment} from "hardhat/types"
+import { DeployFunction } from "hardhat-deploy/types"
+import { HardhatRuntimeEnvironment } from "hardhat/types"
 
 const deployQi: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployments, getNamedAccounts } = hre
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
-
 
     log("Deploying Qi...")
     await deploy("Qi", {
@@ -23,7 +22,6 @@ const deployQi: DeployFunction = async function (hre: HardhatRuntimeEnvironment)
 
     log("Qi Deployed!")
     log("----------------------------------")
-
 }
 export default deployQi
 deployQi.tags = ["all", "qi", "contracts", "main"]

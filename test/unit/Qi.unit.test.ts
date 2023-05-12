@@ -1,9 +1,9 @@
-import {developmentChains, qiBaseURI} from "../../helper-hardhat-config"
-import {deployments, ethers, network} from "hardhat"
-import {Qi} from "../../typechain-types"
-import {SignerWithAddress} from "@nomiclabs/hardhat-ethers/signers"
-import {BigNumber} from "ethers"
-import {assert, expect} from "chai"
+import { developmentChains, qiBaseURI } from "../../helper-hardhat-config"
+import { deployments, ethers, network } from "hardhat"
+import { Qi } from "../../typechain-types"
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
+import { BigNumber } from "ethers"
+import { assert, expect } from "chai"
 
 !developmentChains.includes(network.name)
     ? describe.skip
@@ -25,9 +25,9 @@ import {assert, expect} from "chai"
 
           describe("Mint NFT", async () => {
               it("Should revert if not enough ETH is sent", async () => {
-                  await expect(
-                      qi.mint({ value: price.sub(1) })
-                  ).to.be.revertedWith("Qi__NotEnoughETHForMint")
+                  await expect(qi.mint({ value: price.sub(1) })).to.be.revertedWith(
+                      "Qi__NotEnoughETHForMint"
+                  )
               })
 
               it("Should mint a Qi", async () => {

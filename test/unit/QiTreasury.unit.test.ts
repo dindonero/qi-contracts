@@ -71,9 +71,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
                   const numNFTsBefore = await qiTreasury.s_numOutstandingNFTs()
 
                   await qi.mint({ value: await qi.MINT_PRICE() })
-                  assert.isTrue(
-                      (await stETH.balanceOf(qiTreasury.address)).gt(stETHBalanceBefore)
-                  )
+                  assert.isTrue((await stETH.balanceOf(qiTreasury.address)).gt(stETHBalanceBefore))
                   assert.equal(
                       (await qiTreasury.s_numOutstandingNFTs()).toString(),
                       numNFTsBefore.add(1).toString()
@@ -85,13 +83,16 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
                       value: (await qi.MINT_PRICE()).add("1000000000000000000000"),
                   })
 
-                  console.log(qiTreasury.address)
+                  const WETH: IERC20 = await ethers.getContractAt(
+                      "IERC20",
+                      networkConfig[network.config!.chainId!].WETH!
+                  )
 
                   const teamMultisig = networkConfig[network.config!.chainId!].teamMultisig!
                   const yamReserves = networkConfig[network.config!.chainId!].yamReserves!
 
-                  const teamMultisigBalanceBefore = await ethers.provider.getBalance(teamMultisig)
-                  const yamGovBalanceBefore = await ethers.provider.getBalance(yamReserves)
+                  const teamMultisigBalanceBefore = await WETH.balanceOf(teamMultisig)
+                  const yamGovBalanceBefore = await WETH.balanceOf(yamReserves)
 
                   await expect(qiTreasury.withdrawTeamAndTreasuryFee()).to.be.revertedWith(
                       "QiTreasury: Can only withdraw every 6 months"
@@ -103,10 +104,8 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
                   const tx = await qiTreasury.withdrawTeamAndTreasuryFee()
                   await tx.wait(1)
 
-                  assert.isTrue(
-                      (await ethers.provider.getBalance(teamMultisig)).gt(teamMultisigBalanceBefore)
-                  )
-                  assert.isTrue((await ethers.provider.getBalance(yamReserves)).gt(yamGovBalanceBefore))
+                  assert.isTrue((await WETH.balanceOf(teamMultisig)).gt(teamMultisigBalanceBefore))
+                  assert.isTrue((await WETH.balanceOf(yamReserves)).gt(yamGovBalanceBefore))
 
                   await expect(qiTreasury.withdrawTeamAndTreasuryFee()).to.be.revertedWith(
                       "QiTreasury: Can only withdraw every 6 months"
