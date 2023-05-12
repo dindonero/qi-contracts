@@ -34,7 +34,7 @@ import { assert, expect } from "chai"
                   const mintTx = await qiBackground.mint({ value: price })
                   const mintReceipt = await mintTx.wait(1)
 
-                  const eventTopics = mintReceipt.events![5].topics
+                  const eventTopics = mintReceipt.events![4].topics
 
                   const tokenId = +eventTopics[2]
 

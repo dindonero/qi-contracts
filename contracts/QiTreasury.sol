@@ -1,42 +1,40 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./interfaces/uniswap/IWETH9.sol";
 
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
-import "@uniswap/v2-periphery/contracts/interfaces/IUniswapV2Router02.sol";
 import "./access/Governable.sol";
+import "./interfaces/ICurvePool.sol";
+import "./interfaces/ILido.sol";
+import "./interfaces/IWETH9.sol";
 
 /**
  * @title QiTreasury
  * @notice This contract is used to manage the Qi treasury
- * @dev This contract assumes:
- * 1. The QiTreasury holds an unlimited amount of YAM
- * 2. Exists an already initialized position in the Uniswap wstETH <=> YAM pool
+ * @dev All ETH it receives is converted to stETH and deposited into the Lido stETH pool
+ * @dev The stETH is then redistributed among the NFT holders, rewarding late burners with extra stETH
  */
 contract QiTreasury is Governable {
     address public s_qi;
 
-    IERC20 public immutable i_wstETH;
+    ILido public immutable i_stETH;
 
-    address public immutable i_WETH;
+    IWETH9 public immutable i_WETH;
 
-    address public immutable i_DAI;
-
-    IUniswapV2Router02 public immutable i_swapRouter;
+    ICurvePool internal immutable i_curveEthStEthPool;
 
     uint256 public s_numOutstandingNFTs;
-
-    uint24 public constant POOL_FEE = 3000;
 
     address private s_teamMultisig;
 
     uint256 public immutable i_deployedTime;
 
     uint8 public s_numTeamWithdrawsPerformed;
+
+    address internal constant RESERVES = 0x97990B693835da58A281636296D2Bf02787DEa17;
 
     modifier onlyQi() {
         require(msg.sender == s_qi, "QiTreasury: Only Qi can call this function.");
@@ -45,18 +43,16 @@ contract QiTreasury is Governable {
 
     constructor(
         address _qi,
-        IERC20 _wstETH,
-        address _WETH,
-        address _DAI,
-        IUniswapV2Router02 _swapRouter,
+        ILido _stETH,
+        IWETH9 _WETH,
+        ICurvePool _curveEthStEthPool,
         address _yamGovernance,
         address _teamMultisig
     ) {
         s_qi = _qi;
-        i_wstETH = _wstETH;
+        i_stETH = _stETH;
         i_WETH = _WETH;
-        i_DAI = _DAI;
-        i_swapRouter = _swapRouter;
+        i_curveEthStEthPool = _curveEthStEthPool;
         i_deployedTime = block.timestamp;
         s_teamMultisig = _teamMultisig;
         _setGov(_yamGovernance);
@@ -69,38 +65,38 @@ contract QiTreasury is Governable {
     /**
      * @dev Deposits ETH into Lido's contract and then deposits the wstETH into the Uniswap position
      * @dev Stores the liquidity amount in a QiTokenNFT mapping and returns the amount of wstETH received
-     * @return The amount of wstETH received
+     * @return The amount of stETH received
      */
     function depositETHFromMint() external payable onlyQi returns (uint256) {
-        // Deposit ETH into Lido and receive wstETH
-        uint256 wstETHAmount = depositETHForWstETH(msg.value);
-
         s_numOutstandingNFTs++;
 
-        return wstETHAmount;
+        // Deposit ETH into Lido and receive stETH
+        uint256 stETHAmount = depositETHForStETH(msg.value);
+
+        return stETHAmount;
     }
 
     /**
-     * @dev Swaps wstETH for ETH and returns the amount received
+     * @dev Swaps stETH for ETH and returns the amount received
      * @param receiver The address of the owner of the NFT who will receive the funds
      */
-    function withdrawByQiBurned(address receiver) external onlyQi returns (uint256 wethAmount) {
-        uint256 wstETHAmount = i_wstETH.balanceOf(address(this)) / s_numOutstandingNFTs;
+    function withdrawByQiBurned(address receiver) external onlyQi returns (uint256 ethAmount) {
+        uint256 stETHAmount = i_stETH.balanceOf(address(this)) / s_numOutstandingNFTs;
 
-        // Retain 5% of the wstETH for the treasury
-        uint256 reclaimableWstETH = (wstETHAmount * 95) / 100;
+        // Retain 5% of the stETH for the treasury
+        uint256 reclaimableStETH = (stETHAmount * 95) / 100;
 
-        // Swap wstETH for WETH -- future improvement: unstake when possible
-        wethAmount = swapWstETHForWETH(reclaimableWstETH);
-        IWETH9(i_WETH).withdraw(wethAmount);
+        // Swap StETH for ETH -- future improvement: unstake when possible
+        swapStETHForETH(reclaimableStETH);
 
         s_numOutstandingNFTs--;
 
-        TransferHelper.safeTransferETH(receiver, wethAmount);
+        ethAmount = address(this).balance;
+        TransferHelper.safeTransferETH(receiver, ethAmount);
     }
 
     /**
-     * @notice Withdraws 2% of the wstETH balance to the team multisig and yam governance
+     * @notice Withdraws 2% of the StETH balance to the team multisig and yam governance reserves
      * @dev Can only be called every 6 months
      */
     function withdrawTeamAndTreasuryFee() external {
@@ -111,21 +107,23 @@ contract QiTreasury is Governable {
         );
         s_numTeamWithdrawsPerformed++;
 
-        uint256 wstETHAmount = i_wstETH.balanceOf(address(this));
-        uint256 withdrawableWstETHAmount = (wstETHAmount * 2) / 100;
+        uint256 stETHAmount = i_stETH.balanceOf(address(this));
+        uint256 withdrawableStETHAmount = (stETHAmount * 2) / 100;
 
-        uint256 wethAmount = swapWstETHForWETH(withdrawableWstETHAmount);
+        swapStETHForETH(withdrawableStETHAmount);
 
-        IWETH9(i_WETH).withdraw(wethAmount);
+        i_WETH.deposit{value: address(this).balance}();
 
-        uint256 ethFeeAmount = wethAmount / 2;
+        uint256 wethAmount = i_WETH.balanceOf(address(this));
 
-        TransferHelper.safeTransferETH(s_teamMultisig, ethFeeAmount);
-        TransferHelper.safeTransferETH(gov, ethFeeAmount);
+        uint256 wethFeeAmount = wethAmount / 2;
+
+        TransferHelper.safeTransfer(address(i_WETH), s_teamMultisig, wethFeeAmount);
+        TransferHelper.safeTransfer(address(i_WETH), RESERVES, wethFeeAmount);
     }
 
     receive() external payable {
-        if (msg.sender != address(i_WETH)) depositETHForWstETH(msg.value);
+        if (msg.sender != address(i_curveEthStEthPool)) depositETHForStETH(msg.value);
     }
 
     /////////////////////////////////////////////////
@@ -151,11 +149,11 @@ contract QiTreasury is Governable {
     /**
      * @notice Removes all liquidity
      * @dev Emergency function - can only be called by governance
-     * @param amount The amount of wstETH to remove
+     * @param amount The amount of stETH to remove
      * @param receiver The address of the owner of the NFT who will receive the funds
      */
     function removeLiquidity(uint256 amount, address receiver) external onlyGov {
-        TransferHelper.safeTransfer(address(i_wstETH), receiver, amount);
+        TransferHelper.safeTransfer(address(i_stETH), receiver, amount);
     }
 
     /////////////////////////////////////////////////
@@ -163,38 +161,25 @@ contract QiTreasury is Governable {
     /////////////////////////////////////////////////
 
     /**
-     * @dev Deposits ETH into Lido's contract and returns the amount of wstETH received
-     * @param amount The amount to deposit in Lido's wstETH contract
-     * @return The amount of wstETH received
+     * @dev Deposits ETH into Lido's contract and returns the amount of stETH received
+     * @param amount The amount to deposit in Lido's stETH contract
+     * @return The amount of stETH received
      */
-    function depositETHForWstETH(uint256 amount) internal returns (uint256) {
-        (bool sent /* bytes memory data */, ) = address(i_wstETH).call{value: amount}("");
-        require(sent, "Failed to deposit ETH into Lido");
-        return i_wstETH.balanceOf(address(this));
+    function depositETHForStETH(uint256 amount) internal returns (uint256) {
+        i_stETH.submit{value: amount}(address(0));
+        return i_stETH.balanceOf(address(this));
     }
 
     /**
-     * @dev Swaps wstETH for WETH and returns the amount received
+     * @dev Swaps stETH for ETH and returns the amount received
      * @dev Uses sushiswap router
-     * @param wstETHAmount The amount of wstETH to swap
-     * @return The amount of WETH received
+     * @param stETHAmount The amount of stETH to swap
      */
-    function swapWstETHForWETH(uint256 wstETHAmount) internal returns (uint256) {
-        TransferHelper.safeApprove(address(i_wstETH), address(i_swapRouter), wstETHAmount);
+    function swapStETHForETH(uint256 stETHAmount) internal {
 
-        address[] memory path = new address[](3);
-        path[0] = address(i_wstETH);
-        path[1] = i_DAI;
-        path[2] = i_WETH;
+        uint256 stEthAmount = i_stETH.balanceOf(address(this));
 
-        uint256[] memory amountsOut = i_swapRouter.swapExactTokensForTokens(
-            wstETHAmount,
-            0,
-            path,
-            address(this),
-            block.timestamp
-        );
-
-        return amountsOut[amountsOut.length - 1];
+        i_stETH.approve(address(i_curveEthStEthPool), stEthAmount);
+        i_curveEthStEthPool.exchange(1, 0, stEthAmount, 0); // TODO: define minAmountOut to prevent MEV
     }
 }

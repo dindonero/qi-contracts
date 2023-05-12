@@ -12,8 +12,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
           let qi: Qi
           let deployer: SignerWithAddress
           let alice: SignerWithAddress
-          let yamGov: string
-          let wstETH: IERC20
+          let stETH: IERC20
 
           beforeEach(async () => {
               const accounts = await ethers.getSigners()
@@ -25,10 +24,9 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
               qiBackground = await ethers.getContractAt("QiBackground", qiBackgroundProxy.address)
               const qiProxy = await ethers.getContract("Qi_Proxy")
               qi = await ethers.getContractAt("Qi", qiProxy.address)
-              yamGov = networkConfig[network.config!.chainId!].yamGovernance!
-              wstETH = await ethers.getContractAt(
+              stETH = await ethers.getContractAt(
                   "IERC20",
-                  networkConfig[network.config!.chainId!].wstETH!
+                  networkConfig[network.config!.chainId!].stEth!
               )
           })
 
@@ -68,13 +66,13 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
           })
 
           describe("Qi functions", async () => {
-              it("Minting a Qi NFT should deposit wstETH into QiTreasury", async () => {
-                  const wstETHBalanceBefore = await wstETH.balanceOf(qiTreasury.address)
+              it("Minting a Qi NFT should deposit stETH into QiTreasury", async () => {
+                  const stETHBalanceBefore = await stETH.balanceOf(qiTreasury.address)
                   const numNFTsBefore = await qiTreasury.s_numOutstandingNFTs()
 
                   await qi.mint({ value: await qi.MINT_PRICE() })
                   assert.isTrue(
-                      (await wstETH.balanceOf(qiTreasury.address)).gt(wstETHBalanceBefore)
+                      (await stETH.balanceOf(qiTreasury.address)).gt(stETHBalanceBefore)
                   )
                   assert.equal(
                       (await qiTreasury.s_numOutstandingNFTs()).toString(),
@@ -87,11 +85,13 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
                       value: (await qi.MINT_PRICE()).add("1000000000000000000000"),
                   })
 
+                  console.log(qiTreasury.address)
+
                   const teamMultisig = networkConfig[network.config!.chainId!].teamMultisig!
-                  const yamGov = networkConfig[network.config!.chainId!].yamGovernance!
+                  const yamReserves = networkConfig[network.config!.chainId!].yamReserves!
 
                   const teamMultisigBalanceBefore = await ethers.provider.getBalance(teamMultisig)
-                  const yamGovBalanceBefore = await ethers.provider.getBalance(yamGov)
+                  const yamGovBalanceBefore = await ethers.provider.getBalance(yamReserves)
 
                   await expect(qiTreasury.withdrawTeamAndTreasuryFee()).to.be.revertedWith(
                       "QiTreasury: Can only withdraw every 6 months"
@@ -106,7 +106,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
                   assert.isTrue(
                       (await ethers.provider.getBalance(teamMultisig)).gt(teamMultisigBalanceBefore)
                   )
-                  assert.isTrue((await ethers.provider.getBalance(yamGov)).gt(yamGovBalanceBefore))
+                  assert.isTrue((await ethers.provider.getBalance(yamReserves)).gt(yamGovBalanceBefore))
 
                   await expect(qiTreasury.withdrawTeamAndTreasuryFee()).to.be.revertedWith(
                       "QiTreasury: Can only withdraw every 6 months"

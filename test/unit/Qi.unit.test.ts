@@ -34,8 +34,8 @@ import {assert, expect} from "chai"
                   const mintTx = await qi.mint({ value: price })
                   const mintReceipt = await mintTx.wait(1)
 
-                  const eventTopics = mintReceipt.events![7].topics
-                  
+                  const eventTopics = mintReceipt.events![6].topics
+
                   const tokenId = +eventTopics[2]
                   const backgroundTokenId = +eventTopics[3]
                   const qiNFT = await qi.s_tokenIdToQiBackgroundId(tokenId)
@@ -53,7 +53,7 @@ import {assert, expect} from "chai"
                   const mintTx = await qi.mint({ value: price })
                   const mintReceipt = await mintTx.wait(1)
 
-                  tokenId = +mintReceipt.events![7].topics[2]
+                  tokenId = +mintReceipt.events![6].topics[2]
               })
 
               it("Should revert if not owner tries to burn", async () => {

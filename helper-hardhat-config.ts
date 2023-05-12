@@ -1,13 +1,13 @@
 export type NetworkConfigItem = {
     name?: string
     //ERC20 tokens
-    wstETH?: string
+    stEth?: string
     WETH?: string
-    DAI?: string
-    // Uniswap Addresses
-    swapRouter?: string
+    // Curve pool Addresses
+    curveEthStEthPool?: string
     // Yam and team addresses
     yamGovernance?: string
+    yamReserves?: string
     teamMultisig?: string
 }
 
@@ -18,29 +18,28 @@ export type NetworkConfigInfo = {
 export const networkConfig: NetworkConfigInfo = {
     31337: {
         name: "hardhat",
-        swapRouter: "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
-        wstETH: "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0",
+        curveEthStEthPool: "0xDC24316b9AE028F1497c275EB9192a3Ea0f67022",
+        stEth: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
         WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-        DAI: "0x6B175474E89094C44Da98b954EedeAC495271d0F",
         yamGovernance: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // deployer TODO: change to yam governance
+        yamReserves: "0x97990B693835da58A281636296D2Bf02787DEa17",
         teamMultisig: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266", // deployer TODO: change to team multisig
     },
     5: {
         name: "goerli",
-        swapRouter: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
-        wstETH: "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f",
-        WETH: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
-        DAI: "0xdc31ee1784292379fbb2964b3b9c4124d8f89c60",
+        curveEthStEthPool: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+        stEth: "",
         yamGovernance: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to yam governance
+        yamReserves: "0x97990B693835da58A281636296D2Bf02787DEa17",
         teamMultisig: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to team multisig
     },
     11155111: {
         name: "sepolia",
-        swapRouter: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
-        wstETH: "0x6320cd32aa674d2898a68ec82e869385fc5f7e2f",
-        WETH: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
+        curveEthStEthPool: "", // TODO: change to sepolia curve pool
+        stEth: "",
         DAI: "0xdc31ee1784292379fbb2964b3b9c4124d8f89c60",
         yamGovernance: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to yam governance
+        yamReserves: "0x97990B693835da58A281636296D2Bf02787DEa17",
         teamMultisig: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to team multisig
     },
 }
