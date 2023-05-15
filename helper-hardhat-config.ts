@@ -28,7 +28,8 @@ export const networkConfig: NetworkConfigInfo = {
     5: {
         name: "goerli",
         curveEthStEthPool: "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
-        stEth: "",
+        stEth: "0x1643E812aE58766192Cf7D2Cf9567dF2C37e9B7F",
+        WETH: "0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6",
         yamGovernance: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to yam governance
         yamReserves: "0x97990B693835da58A281636296D2Bf02787DEa17",
         teamMultisig: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to team multisig
@@ -37,7 +38,6 @@ export const networkConfig: NetworkConfigInfo = {
         name: "sepolia",
         curveEthStEthPool: "", // TODO: change to sepolia curve pool
         stEth: "",
-        DAI: "0xdc31ee1784292379fbb2964b3b9c4124d8f89c60",
         yamGovernance: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to yam governance
         yamReserves: "0x97990B693835da58A281636296D2Bf02787DEa17",
         teamMultisig: "0xA3f4d9497Bf09800a76472251fAdaa86B1Af9c01", // deployer TODO: change to team multisig
