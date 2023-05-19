@@ -14,45 +14,45 @@ const updateFrontEnd: DeployFunction = async function (hre: HardhatRuntimeEnviro
 }
 
 const updateAbi = async () => {
-    const qi = await ethers.getContract("Qi")
+    const yiqi = await ethers.getContract("Yiqi")
     fs.writeFileSync(
-        `${frontEndAbiLocation}Qi.json`,
-        qi.interface.format(ethers.utils.FormatTypes.json).toString()
+        `${frontEndAbiLocation}Yiqi.json`,
+        yiqi.interface.format(ethers.utils.FormatTypes.json).toString()
     )
 
-    const qiBackground = await ethers.getContract("QiBackground")
+    const yiqiBackground = await ethers.getContract("YiqiBackground")
     fs.writeFileSync(
-        `${frontEndAbiLocation}QiBackground.json`,
-        qiBackground.interface.format(ethers.utils.FormatTypes.json).toString()
+        `${frontEndAbiLocation}YiqiBackground.json`,
+        yiqiBackground.interface.format(ethers.utils.FormatTypes.json).toString()
     )
 
     // might be unnecessary
-    const qiTreasury = await ethers.getContract("QiTreasury")
+    const yiqiTreasury = await ethers.getContract("YiqiTreasury")
     fs.writeFileSync(
-        `${frontEndAbiLocation}QiTreasury.json`,
-        qiTreasury.interface.format(ethers.utils.FormatTypes.json).toString()
+        `${frontEndAbiLocation}YiqiTreasury.json`,
+        yiqiTreasury.interface.format(ethers.utils.FormatTypes.json).toString()
     )
 }
 
 const updateContractAddresses = async () => {
     const chainId = network.config.chainId!.toString()
-    const qi = await ethers.getContract("Qi_Proxy")
-    const qiBackground = await ethers.getContract("QiBackground_Proxy")
-    const qiTreasury = await ethers.getContract("QiTreasury")
+    const yiqi = await ethers.getContract("Yiqi_Proxy")
+    const yiqiBackground = await ethers.getContract("YiqiBackground_Proxy")
+    const yiqiTreasury = await ethers.getContract("YiqiTreasury")
 
     const contractAddresses = JSON.parse(fs.readFileSync(frontEndContractsFile, "utf8"))
 
     if (chainId in contractAddresses) {
-        if (!contractAddresses[chainId]["Qi"].includes(qi.address)) {
-            contractAddresses[chainId]["Qi"].push(qi.address)
-            contractAddresses[chainId]["QiBackground"].push(qiBackground.address)
-            contractAddresses[chainId]["QiTreasury"].push(qiTreasury.address)
+        if (!contractAddresses[chainId]["Yiqi"].includes(yiqi.address)) {
+            contractAddresses[chainId]["Yiqi"].push(yiqi.address)
+            contractAddresses[chainId]["YiqiBackground"].push(yiqiBackground.address)
+            contractAddresses[chainId]["YiqiTreasury"].push(yiqiTreasury.address)
         }
     } else {
         contractAddresses[chainId] = {
-            Qi: [qi.address],
-            QiBackground: [qiBackground.address],
-            QiTreasury: [qiTreasury.address],
+            Yiqi: [yiqi.address],
+            YiqiBackground: [yiqiBackground.address],
+            YiqiTreasury: [yiqiTreasury.address],
         }
     }
 

@@ -1,12 +1,12 @@
-import { ethers, network } from "hardhat"
+import {ethers} from "hardhat"
 
 const requestMint = async () => {
-    const qiProxy = await ethers.getContract("Qi_Proxy")
-    const qi = await ethers.getContractAt("Qi", qiProxy.address)
+    const yiqiProxy = await ethers.getContract("Yiqi_Proxy")
+    const yiqi = await ethers.getContractAt("Yiqi", yiqiProxy.address)
 
     console.log("Requesting mint...")
 
-    const tx = await qi.requestMint(1, { value: ethers.utils.parseEther("0.1") })
+    const tx = await yiqi.requestMint(1, {value: ethers.utils.parseEther("0.1")})
 
     const receipt = await tx.wait(1)
 

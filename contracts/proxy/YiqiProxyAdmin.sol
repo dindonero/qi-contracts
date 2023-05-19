@@ -4,6 +4,6 @@ pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 
-contract QiProxyAdmin is ProxyAdmin {
+contract YiqiProxyAdmin is ProxyAdmin {
     constructor(address /* owner */) ProxyAdmin() {}
 }

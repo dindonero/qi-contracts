@@ -12,13 +12,13 @@ import "./interfaces/ILido.sol";
 import "./interfaces/IWETH9.sol";
 
 /**
- * @title QiTreasury
- * @notice This contract is used to manage the Qi treasury
+ * @title YiqiTreasury
+ * @notice This contract is used to manage the Yiqi treasury
  * @dev All ETH it receives is converted to stETH and deposited into the Lido stETH pool
  * @dev The stETH is then redistributed among the NFT holders, rewarding late burners with extra stETH
  */
-contract QiTreasury is Governable {
-    address public s_qi;
+contract YiqiTreasury is Governable {
+    address internal s_yiqi;
 
     ILido public immutable i_stETH;
 
@@ -26,30 +26,30 @@ contract QiTreasury is Governable {
 
     ICurvePool internal immutable i_curveEthStEthPool;
 
-    uint256 public s_numOutstandingNFTs;
+    uint256 internal s_numOutstandingNFTs;
 
-    address private s_teamMultisig;
+    address internal s_teamMultisig;
 
-    uint256 public immutable i_deployedTime;
+    uint256 internal immutable i_deployedTime;
 
-    uint8 public s_numTeamWithdrawsPerformed;
+    uint8 internal s_numTeamWithdrawsPerformed;
 
     address internal constant RESERVES = 0x97990B693835da58A281636296D2Bf02787DEa17;
 
-    modifier onlyQi() {
-        require(msg.sender == s_qi, "QiTreasury: Only Qi can call this function.");
+    modifier onlyYiqi() {
+        require(msg.sender == s_yiqi, "YiqiTreasury: Only Yiqi can call this function.");
         _;
     }
 
     constructor(
-        address _qi,
+        address _yiqi,
         ILido _stETH,
         IWETH9 _WETH,
         ICurvePool _curveEthStEthPool,
         address _yamGovernance,
         address _teamMultisig
     ) {
-        s_qi = _qi;
+        s_yiqi = _yiqi;
         i_stETH = _stETH;
         i_WETH = _WETH;
         i_curveEthStEthPool = _curveEthStEthPool;
@@ -59,15 +59,15 @@ contract QiTreasury is Governable {
     }
 
     /////////////////////////////////////////////////
-    ///             OnlyQi functions              ///
+    ///             OnlyYiqi functions              ///
     /////////////////////////////////////////////////
 
     /**
      * @dev Deposits ETH into Lido's contract and then deposits the wstETH into the Uniswap position
-     * @dev Stores the liquidity amount in a QiTokenNFT mapping and returns the amount of wstETH received
+     * @dev Stores the liquidity amount in a YiqiTokenNFT mapping and returns the amount of wstETH received
      * @return The amount of stETH received
      */
-    function depositETHFromMint() external payable onlyQi returns (uint256) {
+    function depositETHFromMint() external payable onlyYiqi returns (uint256) {
         s_numOutstandingNFTs++;
 
         // Deposit ETH into Lido and receive stETH
@@ -80,7 +80,7 @@ contract QiTreasury is Governable {
      * @dev Swaps stETH for ETH and returns the amount received
      * @param receiver The address of the owner of the NFT who will receive the funds
      */
-    function withdrawByQiBurned(address receiver) external onlyQi returns (uint256 ethAmount) {
+    function withdrawByYiqiBurned(address receiver) external onlyYiqi returns (uint256 ethAmount) {
         uint256 stETHAmount = i_stETH.balanceOf(address(this)) / s_numOutstandingNFTs;
 
         // Retain 5% of the stETH for the treasury
@@ -103,7 +103,7 @@ contract QiTreasury is Governable {
         require(
             block.timestamp >=
                 i_deployedTime + (6 * 30 days) * uint256(s_numTeamWithdrawsPerformed + 1),
-            "QiTreasury: Can only withdraw every 6 months"
+            "YiqiTreasury: Can only withdraw every 6 months"
         );
         s_numTeamWithdrawsPerformed++;
 
@@ -131,11 +131,11 @@ contract QiTreasury is Governable {
     /////////////////////////////////////////////////
 
     /**
-     * @notice Sets the Qi address
-     * @param _qi The address of the Qi contract
+     * @notice Sets the Yiqi address
+     * @param _yiqi The address of the Yiqi contract
      */
-    function setQi(address _qi) external onlyGov {
-        s_qi = _qi;
+    function setYiqi(address _yiqi) external onlyGov {
+        s_yiqi = _yiqi;
     }
 
     /**
@@ -154,6 +154,14 @@ contract QiTreasury is Governable {
      */
     function removeLiquidity(uint256 amount, address receiver) external onlyGov {
         TransferHelper.safeTransfer(address(i_stETH), receiver, amount);
+    }
+
+    /////////////////////////////////////////////////
+    ///                Getters                    ///
+    /////////////////////////////////////////////////
+
+    function getNumOutstandingNFTs() external view returns (uint256) {
+        return s_numOutstandingNFTs;
     }
 
     /////////////////////////////////////////////////

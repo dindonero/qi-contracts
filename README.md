@@ -1,13 +1,13 @@
-# Qi Hardhat Contracts
+# Yiqi Hardhat Contracts
 
-This repo holds Qi main and background contracts developed using Hardhat and Typescript.
+This repo holds Yiqi main and background contracts developed using Hardhat and Typescript.
 
 ## Installation
 
 1. Clone the repository and install the dependencies.
 ```bash
-git clone https://github.com/dindonero/qi-contracts.git
-cd qi-contracts
+git clone https://github.com/dindonero/yiqi-contracts.git
+cd yiqi-contracts
 yarn install
 ```
 2. (Optional: Goerli) Create a `.env` file in the root directory and add the following environment variables:

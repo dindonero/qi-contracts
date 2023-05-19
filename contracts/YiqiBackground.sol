@@ -7,18 +7,18 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/common/ERC2981.sol";
 
 // TODO: if backend doesn't implement any enumerable function, then change it to standard erc721
-contract QiBackground is ERC2981, ERC721 {
+contract YiqiBackground is ERC2981, ERC721 {
     /// @notice Counter for the token ID
-    uint256 public s_nextTokenId;
+    uint256 internal s_nextTokenId;
 
-    /// @notice Address of the Qi contract
-    address public s_qi;
+    /// @notice Address of the Yiqi contract
+    address internal immutable i_yiqi;
 
-    /// @notice Address of the QiTreasury contract
-    address public s_qiTreasury;
+    /// @notice Address of the YiqiTreasury contract
+    address internal s_yiqiTreasury;
 
     /// @notice The base URI for the NFT metadata
-    string public BASE_URI;
+    string internal BASE_URI;
 
     /// @notice The price for minting a new NFT
     // TODO TEAM: check mint price
@@ -26,34 +26,36 @@ contract QiBackground is ERC2981, ERC721 {
 
     bool internal initialized;
 
-    event QiBackgroundMinted(address indexed owner, uint256 indexed tokenId);
+    event YiqiBackgroundMinted(address indexed owner, uint256 indexed tokenId);
 
-    modifier onlyQi() {
-        require(msg.sender == s_qi, "QiTreasury: Only Qi can call this function.");
+    modifier onlyYiqi() {
+        require(msg.sender == i_yiqi, "YiqiTreasury: Only Yiqi can call this function.");
         _;
     }
 
-    error QiBackground__NotEnoughETHForMint(uint256 price, uint256 amount);
-    error QiBackground__AlreadyInitialized();
+    error YiqiBackground__NotEnoughETHForMint(uint256 price, uint256 amount);
+    error YiqiBackground__AlreadyInitialized();
 
-    constructor() ERC721("QI Background", "QIB") {}
+    constructor(
+        address _yiqi
+    ) ERC721("QI Background", "QIB") {
+        i_yiqi = _yiqi;
+    }
 
     /**
      * @dev Initializes the contract
      */
     function initialize(
+        address _yiqiTreasury,
         string memory _baseUri,
-        address _qi,
-        address _qiTreasury,
         uint96 _feeNumerator
     ) external {
-        if (initialized) revert QiBackground__AlreadyInitialized();
+        if (initialized) revert YiqiBackground__AlreadyInitialized();
         // TODO: require msg.sender == hardcoded address to prevent frontrunning
         initialized = true;
         BASE_URI = _baseUri;
-        s_qi = _qi;
-        s_qiTreasury = _qiTreasury;
-        _setDefaultRoyalty(_qiTreasury, _feeNumerator);
+        s_yiqiTreasury = _yiqiTreasury;
+        _setDefaultRoyalty(s_yiqiTreasury, _feeNumerator);
     }
 
     /**
@@ -62,35 +64,35 @@ contract QiBackground is ERC2981, ERC721 {
      */
     function mint() public payable {
         if (msg.value < MINT_PRICE) {
-            revert QiBackground__NotEnoughETHForMint(MINT_PRICE, msg.value);
+            revert YiqiBackground__NotEnoughETHForMint(MINT_PRICE, msg.value);
         }
 
         uint256 tokenId = s_nextTokenId;
         s_nextTokenId++;
 
-        s_qiTreasury.call{value: msg.value}("");
+        s_yiqiTreasury.call{value: msg.value}("");
 
         _safeMint(msg.sender, tokenId);
-        emit QiBackgroundMinted(msg.sender, tokenId);
+        emit YiqiBackgroundMinted(msg.sender, tokenId);
     }
 
     /**
      * @notice Mints a new NFT
-     * @dev This function can only be called by the Qi contract
+     * @dev This function can only be called by the Yiqi contract
      */
-    function mintBackgroundWithQi(address receiver) external onlyQi returns (uint256 tokenId) {
+    function mintBackgroundWithYiqi(address receiver) external onlyYiqi returns (uint256 tokenId) {
         tokenId = s_nextTokenId;
         s_nextTokenId++;
 
         _safeMint(receiver, tokenId);
-        emit QiBackgroundMinted(receiver, tokenId);
+        emit YiqiBackgroundMinted(receiver, tokenId);
     }
 
     /**
      * @dev See {IERC721Metadata-name}.
      */
     function name() public view virtual override returns (string memory) {
-        return "Qi Background";
+        return "Yiqi Background";
     }
 
     /**

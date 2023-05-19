@@ -45,12 +45,12 @@ export const networkConfig: NetworkConfigInfo = {
 }
 
 export const developmentChains = ["hardhat", "localhost", "local"]
-export const qiBaseURI = "https://api.qi.io/token/" // TODO: Change this to the correct baseURI
-export const qiBackgroundBaseURI = "https://api.qi.io/background/" // TODO: Change this to the correct baseURI
+export const yiqiBaseURI = "https://api.yiqi.us/token/" // TODO: Change this to the correct baseURI
+export const yiqiBackgroundBaseURI = "https://api.yiqi.io/background/" // TODO: Change this to the correct baseURI
 
-export const qiRoyaltiesFeeNumerator = "300" // TODO: check this value. Denominator 10000 -- so 300 = 3%
+export const yiqiRoyaltiesFeeNumerator = "300" // TODO: check this value. Denominator 10000 -- so 300 = 3%
 
-export const qiBackgroundRoyaltiesFeeNumerator = "300" // TODO: check this value. Denominator 10000 -- so 300 = 3%
+export const yiqiBackgroundRoyaltiesFeeNumerator = "300" // TODO: check this value. Denominator 10000 -- so 300 = 3%
 
-export const frontEndContractsFile = "../qi-marketplace/constants/networkMapping.json"
-export const frontEndAbiLocation = "../qi-marketplace/constants/"
+export const frontEndContractsFile = "../yiqi-marketplace/constants/networkMapping.json"
+export const frontEndAbiLocation = "../yiqi-marketplace/constants/"
