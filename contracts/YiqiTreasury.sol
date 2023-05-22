@@ -20,9 +20,9 @@ import "./interfaces/IWETH9.sol";
 contract YiqiTreasury is Governable {
     address internal s_yiqi;
 
-    ILido public immutable i_stETH;
+    ILido internal immutable i_stETH;
 
-    IWETH9 public immutable i_WETH;
+    IWETH9 internal immutable i_WETH;
 
     ICurvePool internal immutable i_curveEthStEthPool;
 
@@ -152,8 +152,8 @@ contract YiqiTreasury is Governable {
      * @param amount The amount of stETH to remove
      * @param receiver The address of the owner of the NFT who will receive the funds
      */
-    function removeLiquidity(uint256 amount, address receiver) external onlyGov {
-        TransferHelper.safeTransfer(address(i_stETH), receiver, amount);
+    function removeLiquidity(address receiver) external onlyGov {
+        TransferHelper.safeTransfer(address(i_stETH), receiver, i_stETH.balanceOf(address(this)));
     }
 
     /////////////////////////////////////////////////
