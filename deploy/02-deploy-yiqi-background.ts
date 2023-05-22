@@ -1,6 +1,8 @@
 import {DeployFunction} from "hardhat-deploy/types"
 import {HardhatRuntimeEnvironment} from "hardhat/types"
-import {ethers} from "hardhat";
+import {ethers, network} from "hardhat";
+import {developmentChains} from "../helper-hardhat-config";
+import verify from "../utils/verifyOnEtherscan";
 
 const deployYiqiBackground: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployments, getNamedAccounts } = hre
@@ -28,6 +30,9 @@ const deployYiqiBackground: DeployFunction = async function (hre: HardhatRuntime
     })
 
     log("YiqiBackground Deployed!")
+
+    if (!developmentChains.includes(network.name) && process.env.VERIFY_ON_ETHERSCAN === "true")
+        await verify((await ethers.getContract("YiqiBackground_Implementation")).address, args)
     log("----------------------------------")
 }
 export default deployYiqiBackground

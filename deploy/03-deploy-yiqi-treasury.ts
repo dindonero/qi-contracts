@@ -1,6 +1,8 @@
 import { DeployFunction } from "hardhat-deploy/types"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
-import { networkConfig } from "../helper-hardhat-config"
+import {developmentChains, networkConfig} from "../helper-hardhat-config"
+import {network} from "hardhat";
+import verify from "../utils/verifyOnEtherscan";
 
 const deployYiqiTreasury: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployments, getNamedAccounts, network, ethers } = hre
@@ -18,13 +20,16 @@ const deployYiqiTreasury: DeployFunction = async function (hre: HardhatRuntimeEn
     const args = [yiqi.address, stETH, WETH, curveEthStEthPool, yamGovernance, teamMultisig]
 
     log("Deploying YiqiTreasury...")
-    await deploy("YiqiTreasury", {
+    const yiqiTreasury = await deploy("YiqiTreasury", {
         from: deployer,
         log: true,
         args: args,
     })
 
     log("YiqiTreasury Deployed!")
+
+    if (!developmentChains.includes(network.name) && process.env.VERIFY_ON_ETHERSCAN === "true")
+        await verify(yiqiTreasury.address, args)
     log("----------------------------------")
 }
 export default deployYiqiTreasury

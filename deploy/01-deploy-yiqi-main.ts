@@ -1,5 +1,8 @@
 import {DeployFunction} from "hardhat-deploy/types"
 import {HardhatRuntimeEnvironment} from "hardhat/types"
+import verify from "../utils/verifyOnEtherscan";
+import {ethers, network} from "hardhat";
+import {developmentChains} from "../helper-hardhat-config";
 
 const deployYiqi: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const { deployments, getNamedAccounts } = hre
@@ -21,7 +24,11 @@ const deployYiqi: DeployFunction = async function (hre: HardhatRuntimeEnvironmen
     })
 
     log("Yiqi Deployed!")
+
+    if (!developmentChains.includes(network.name) && process.env.VERIFY_ON_ETHERSCAN === "true")
+        await verify((await ethers.getContract("Yiqi_Implementation")).address, [])
     log("----------------------------------")
+
 }
 export default deployYiqi
 deployYiqi.tags = ["all", "yiqi", "contracts", "main"]
