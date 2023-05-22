@@ -34,9 +34,9 @@ import {deployContract} from "ethereum-waffle";
             const upgradeTx = await yiqiProxyAdmin.upgrade(yiqiProxy.address, newYiqi.address)
             await upgradeTx.wait(1)
         })
-        /*it("can deploy and upgrade yiqiBackground", async function () {
+        it("can deploy and upgrade yiqiBackground", async function () {
 
-            const factory = new ethers.ContractFactory(YiqiBackground__factory.abi, YiqiBackground__factory.bytecode)
+            const factory = new ethers.ContractFactory(YiqiBackground__factory.abi, YiqiBackground__factory.bytecode, (await ethers.getSigners())[0])
             const newYiqiBackground = await factory.deploy(yiqi.address)
 
             // Tests if the proxy upgrade doesn't fail
@@ -45,5 +45,5 @@ import {deployContract} from "ethereum-waffle";
                 newYiqiBackground.address
             )
             await upgradeTx.wait(1)
-        })*/
+        })
     })
