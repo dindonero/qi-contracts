@@ -183,9 +183,7 @@ contract YiqiTreasury is Governable {
      * @param stETHAmount The amount of stETH to swap
      */
     function swapStETHForETH(uint256 stETHAmount) internal {
-        uint256 stEthAmount = i_stETH.balanceOf(address(this));
-
-        i_stETH.approve(address(i_curveEthStEthPool), stEthAmount);
-        i_curveEthStEthPool.exchange(1, 0, stEthAmount, 0); // TODO: define minAmountOut to prevent MEV
+        i_stETH.approve(address(i_curveEthStEthPool), stETHAmount);
+        i_curveEthStEthPool.exchange(1, 0, stETHAmount, 0); // TODO: define minAmountOut to prevent MEV
     }
 }

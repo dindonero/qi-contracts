@@ -59,7 +59,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
 
               it("Only gov can remove liquidity", async () => {
                   await expect(
-                      yiqiTreasury.connect(alice).removeLiquidity(1, deployer.address)
+                      yiqiTreasury.connect(alice).removeLiquidity(deployer.address)
                   ).to.be.revertedWith("Governable: forbidden")
               })
           })
