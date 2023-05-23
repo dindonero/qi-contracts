@@ -149,7 +149,6 @@ contract YiqiTreasury is Governable {
     /**
      * @notice Removes all liquidity
      * @dev Emergency function - can only be called by governance
-     * @param amount The amount of stETH to remove
      * @param receiver The address of the owner of the NFT who will receive the funds
      */
     function removeLiquidity(address receiver) external onlyGov {
