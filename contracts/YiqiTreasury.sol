@@ -83,13 +83,13 @@ contract YiqiTreasury is Governable {
     function withdrawByYiqiBurned(address receiver) external onlyYiqi returns (uint256 ethAmount) {
         uint256 stETHAmount = i_stETH.balanceOf(address(this)) / s_numOutstandingNFTs;
 
+        s_numOutstandingNFTs--;
+
         // Retain 5% of the stETH for the treasury
         uint256 reclaimableStETH = (stETHAmount * 95) / 100;
 
         // Swap StETH for ETH -- future improvement: unstake when possible
         swapStETHForETH(reclaimableStETH);
-
-        s_numOutstandingNFTs--;
 
         ethAmount = address(this).balance;
         TransferHelper.safeTransferETH(receiver, ethAmount);

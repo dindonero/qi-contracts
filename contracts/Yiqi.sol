@@ -83,11 +83,11 @@ contract Yiqi is ERC721, ERC2981, Governable {
         uint256 tokenId = s_nextTokenId;
         s_nextTokenId++;
 
-        s_yiqiTreasury.depositETHFromMint{value: msg.value}();
-
         uint256 backgroundId = s_yiqiBackground.mintBackgroundWithYiqi(msg.sender);
 
         s_tokenIdToYiqiBackgroundId[tokenId] = backgroundId;
+
+        s_yiqiTreasury.depositETHFromMint{value: msg.value}();
 
         _safeMint(msg.sender, tokenId);
         emit YiqiNFTMinted(msg.sender, tokenId, backgroundId);
