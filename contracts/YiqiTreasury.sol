@@ -81,12 +81,9 @@ contract YiqiTreasury is Governable {
      * @param receiver The address of the owner of the NFT who will receive the funds
      */
     function withdrawByYiqiBurned(address receiver) external onlyYiqi returns (uint256 ethAmount) {
-        uint256 stETHAmount = i_stETH.balanceOf(address(this)) / s_numOutstandingNFTs;
+        uint256 reclaimableStETH = calculateReclaimableStETHFromBurn();
 
         s_numOutstandingNFTs--;
-
-        // Retain 5% of the stETH for the treasury
-        uint256 reclaimableStETH = (stETHAmount * 95) / 100;
 
         // Swap StETH for ETH -- future improvement: unstake when possible
         swapStETHForETH(reclaimableStETH);
@@ -159,6 +156,21 @@ contract YiqiTreasury is Governable {
     ///                Getters                    ///
     /////////////////////////////////////////////////
 
+    /**
+     * @notice Calculates the amount of stETH that can be reclaimed from the treasury by burning 1 Yiqi NFT
+     * @return reclaimableStETH The amount of stETH that can be reclaimed
+     */
+    function calculateReclaimableStETHFromBurn() public view returns (uint256 reclaimableStETH) {
+        uint256 stETHAmount = i_stETH.balanceOf(address(this)) / s_numOutstandingNFTs;
+
+        // Retain 5% of the stETH for the treasury
+        reclaimableStETH = (stETHAmount * 95) / 100;
+    }
+
+    /**
+     * @notice Returns the amount of NFTs left that can be burnt
+     * @return The amount of burnable Yiqi NFTs
+     */
     function getNumOutstandingNFTs() external view returns (uint256) {
         return s_numOutstandingNFTs;
     }
