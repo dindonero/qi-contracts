@@ -96,12 +96,14 @@ contract Yiqi is ERC721, ERC2981, Governable {
     /**
      * @dev Burns `tokenId`. See {ERC721-_burn}.
      * @dev Imported from ERC721Burnable.sol
+     * @param tokenId uint256 token being burned
+     * @param minAmountOut uint256 minimum amount of ETH to receive
      *
      * Requirements:
      *
      * - The caller must own `tokenId` or be an approved operator.
      */
-    function burn(uint256 tokenId) public {
+    function burn(uint256 tokenId, uint256 minAmountOut) public {
         if (!_isApprovedOrOwner(_msgSender(), tokenId))
             revert ERC721__CallerIsNotOwnerOrApproved(tokenId);
 
@@ -109,7 +111,7 @@ contract Yiqi is ERC721, ERC2981, Governable {
 
         _burn(tokenId);
 
-        uint256 ethAmountReturned = s_yiqiTreasury.withdrawByYiqiBurned(msg.sender);
+        uint256 ethAmountReturned = s_yiqiTreasury.withdrawByYiqiBurned(msg.sender, minAmountOut);
 
         emit YiqiNFTBurned(tokenId, msg.sender, backgroundId, ethAmountReturned);
     }

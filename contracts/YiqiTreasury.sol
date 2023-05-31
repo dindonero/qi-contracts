@@ -79,27 +79,36 @@ contract YiqiTreasury is Governable {
     /**
      * @dev Swaps stETH for ETH and returns the amount received
      * @param receiver The address of the owner of the NFT who will receive the funds
+     * @param minAmountOut The minimum amount of ETH to receive from the burn
      */
-    function withdrawByYiqiBurned(address receiver) external onlyYiqi returns (uint256 ethAmount) {
+    function withdrawByYiqiBurned(address receiver, uint256 minAmountOut) external onlyYiqi returns (uint256 ethAmount) {
         uint256 reclaimableStETH = calculateReclaimableStETHFromBurn();
 
         s_numOutstandingNFTs--;
 
-        // Swap StETH for ETH -- future improvement: unstake when possible
-        swapStETHForETH(reclaimableStETH);
+        swapStETHForETH(reclaimableStETH, minAmountOut);
 
         ethAmount = address(this).balance;
         TransferHelper.safeTransferETH(receiver, ethAmount);
     }
 
+    receive() external payable {
+        if (msg.sender != address(i_curveEthStEthPool)) depositETHForStETH(msg.value);
+    }
+
+    /////////////////////////////////////////////////
+    ///             OnlyGov functions             ///
+    /////////////////////////////////////////////////
+
     /**
      * @notice Withdraws 2% of the StETH balance to the team multisig and yam governance reserves
      * @dev Can only be called every 6 months
+     * @param minAmountOut The minimum amount of ETH to receive from the swap from the 2% of stETH
      */
-    function withdrawTeamAndTreasuryFee() external {
+    function withdrawTeamAndTreasuryFee(uint256 minAmountOut) external onlyGov {
         require(
             block.timestamp >=
-                i_deployedTime + (6 * 30 days) * uint256(s_numTeamWithdrawsPerformed + 1),
+            i_deployedTime + (6 * 30 days) * uint256(s_numTeamWithdrawsPerformed + 1),
             "YiqiTreasury: Can only withdraw every 6 months"
         );
         s_numTeamWithdrawsPerformed++;
@@ -107,7 +116,7 @@ contract YiqiTreasury is Governable {
         uint256 stETHAmount = i_stETH.balanceOf(address(this));
         uint256 withdrawableStETHAmount = (stETHAmount * 2) / 100;
 
-        swapStETHForETH(withdrawableStETHAmount);
+        swapStETHForETH(withdrawableStETHAmount, minAmountOut);
 
         i_WETH.deposit{value: address(this).balance}();
 
@@ -118,14 +127,6 @@ contract YiqiTreasury is Governable {
         TransferHelper.safeTransfer(address(i_WETH), s_teamMultisig, wethFeeAmount);
         TransferHelper.safeTransfer(address(i_WETH), RESERVES, wethFeeAmount);
     }
-
-    receive() external payable {
-        if (msg.sender != address(i_curveEthStEthPool)) depositETHForStETH(msg.value);
-    }
-
-    /////////////////////////////////////////////////
-    ///             OnlyGov functions             ///
-    /////////////////////////////////////////////////
 
     /**
      * @notice Sets the Yiqi address
@@ -193,9 +194,10 @@ contract YiqiTreasury is Governable {
      * @dev Swaps stETH for ETH and returns the amount received
      * @dev Uses sushiswap router
      * @param stETHAmount The amount of stETH to swap
+     * @param minAmountOut The minimum amount of ETH to receive
      */
-    function swapStETHForETH(uint256 stETHAmount) internal {
+    function swapStETHForETH(uint256 stETHAmount, uint256 minAmountOut) internal {
         i_stETH.approve(address(i_curveEthStEthPool), stETHAmount);
-        i_curveEthStEthPool.exchange(1, 0, stETHAmount, 0); // TODO: define minAmountOut to prevent MEV
+        i_curveEthStEthPool.exchange(1, 0, stETHAmount, minAmountOut);
     }
 }

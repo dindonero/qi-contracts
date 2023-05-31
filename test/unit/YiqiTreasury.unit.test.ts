@@ -38,7 +38,7 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
               })
 
               it("Only Yiqi can call withdrawByYiqiBurned", async () => {
-                  await expect(yiqiTreasury.withdrawByYiqiBurned(deployer.address)).to.be.revertedWith(
+                  await expect(yiqiTreasury.withdrawByYiqiBurned(deployer.address, 0)).to.be.revertedWith(
                       "YiqiTreasury: Only Yiqi can call this function"
                   )
               })
@@ -93,20 +93,20 @@ import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers"
                   const teamMultisigBalanceBefore = await WETH.balanceOf(teamMultisig)
                   const yamGovBalanceBefore = await WETH.balanceOf(yamReserves)
 
-                  await expect(yiqiTreasury.withdrawTeamAndTreasuryFee()).to.be.revertedWith(
+                  await expect(yiqiTreasury.withdrawTeamAndTreasuryFee(0)).to.be.revertedWith(
                       "YiqiTreasury: Can only withdraw every 6 months"
                   )
 
                   // Advance time by 6 months
                   await network.provider.send("evm_increaseTime", [60 * 60 * 24 * 30 * 6])
 
-                  const tx = await yiqiTreasury.withdrawTeamAndTreasuryFee()
+                  const tx = await yiqiTreasury.withdrawTeamAndTreasuryFee(0)
                   await tx.wait(1)
 
                   assert.isTrue((await WETH.balanceOf(teamMultisig)).gt(teamMultisigBalanceBefore))
                   assert.isTrue((await WETH.balanceOf(yamReserves)).gt(yamGovBalanceBefore))
 
-                  await expect(yiqiTreasury.withdrawTeamAndTreasuryFee()).to.be.revertedWith(
+                  await expect(yiqiTreasury.withdrawTeamAndTreasuryFee(0)).to.be.revertedWith(
                       "YiqiTreasury: Can only withdraw every 6 months"
                   )
               })

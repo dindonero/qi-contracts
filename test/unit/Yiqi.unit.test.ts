@@ -57,7 +57,7 @@ import {assert, expect} from "chai"
             })
 
             it("Should revert if not owner tries to burn", async () => {
-                await expect(yiqi.connect(alice).burn(tokenId)).to.be.revertedWith(
+                await expect(yiqi.connect(alice).burn(tokenId, 0)).to.be.revertedWith(
                     "ERC721__CallerIsNotOwnerOrApproved"
                 )
             })
@@ -65,7 +65,7 @@ import {assert, expect} from "chai"
             it("Should burn NFT", async () => {
                 const balanceBefore = await deployer.getBalance()
 
-                const burnTx = await yiqi.burn(tokenId)
+                const burnTx = await yiqi.burn(tokenId, 0)
                 const burnReceipt = await burnTx.wait(1)
 
                 const balanceAfter = await deployer.getBalance()
@@ -99,7 +99,7 @@ import {assert, expect} from "chai"
 
                 expect(balanceTreasuryBefore).to.be.gte(price.mul(19).div(10))
 
-                const burnTx = await yiqi.burn(tokenId)
+                const burnTx = await yiqi.burn(tokenId, 0)
                 const burnReceipt = await burnTx.wait(1)
 
                 const balanceAfter = await deployer.getBalance()
