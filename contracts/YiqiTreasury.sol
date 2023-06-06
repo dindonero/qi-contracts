@@ -162,6 +162,7 @@ contract YiqiTreasury is Governable {
      * @return reclaimableStETH The amount of stETH that can be reclaimed
      */
     function calculateReclaimableStETHFromBurn() public view returns (uint256 reclaimableStETH) {
+        if (s_numOutstandingNFTs == 0) return 0;
         uint256 stETHAmount = i_stETH.balanceOf(address(this)) / s_numOutstandingNFTs;
 
         // Retain 5% of the stETH for the treasury
